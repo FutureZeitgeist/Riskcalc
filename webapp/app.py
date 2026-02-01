@@ -11,33 +11,42 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from flask import Flask, render_template, request, jsonify
 import numpy as np
 
-from fair_monte_carlo import (
-    RiskScenario,
-    MonteCarloSimulation,
+from fair_monte_carlo.models.fair_model import FAIRModel
+from fair_monte_carlo.simulation.monte_carlo import MonteCarloSimulation
+from fair_monte_carlo.simulation.vulnerability import calculate_vulnerability_vectorized
+from fair_monte_carlo.distributions import (
     PERTDistribution,
+    TriangularDistribution,
     LogNormalDistribution,
     ConstantDistribution,
-    RiskReport,
 )
 
 app = Flask(__name__)
 
 
-def parse_distribution(dist_type: str, params: dict):
+def parse_distribution(dist_data: dict):
     """Parse distribution from form data."""
-    if dist_type == "pert":
+    dist_type = dist_data.get("type", "constant")
+
+    if dist_type == "triangular":
+        return TriangularDistribution(
+            float(dist_data["min"]),
+            float(dist_data["likely"]),
+            float(dist_data["max"])
+        )
+    elif dist_type == "pert":
         return PERTDistribution(
-            float(params["min"]),
-            float(params["likely"]),
-            float(params["max"])
+            float(dist_data["min"]),
+            float(dist_data["likely"]),
+            float(dist_data["max"])
         )
     elif dist_type == "lognormal":
         return LogNormalDistribution(
-            low=float(params["low"]),
-            high=float(params["high"])
+            low=float(dist_data["low"]),
+            high=float(dist_data["high"])
         )
     elif dist_type == "constant":
-        return ConstantDistribution(float(params["value"]))
+        return ConstantDistribution(float(dist_data["value"]))
     else:
         raise ValueError(f"Unknown distribution type: {dist_type}")
 
@@ -54,51 +63,72 @@ def simulate():
     try:
         data = request.json
 
-        # Build the scenario
-        scenario = RiskScenario(data.get("name", "Risk Scenario"))
+        # Build the FAIR model
+        model = FAIRModel(name=data.get("name", "Risk Scenario"))
 
-        # Parse TEF
-        tef_data = data.get("tef", {})
-        if tef_data.get("type") == "pert":
-            scenario.with_tef(PERTDistribution(
-                float(tef_data["min"]),
-                float(tef_data["likely"]),
-                float(tef_data["max"])
-            ))
-        else:
-            scenario.with_tef(float(tef_data.get("value", 10)))
+        calculated_vulnerability = None
 
-        # Parse Vulnerability
-        vuln_data = data.get("vulnerability", {})
-        if vuln_data.get("type") == "pert":
-            scenario.with_vulnerability(PERTDistribution(
-                float(vuln_data["min"]),
-                float(vuln_data["likely"]),
-                float(vuln_data["max"])
-            ))
+        # Handle LEF inputs
+        if "lef" in data:
+            # Direct LEF input
+            model.lef = parse_distribution(data["lef"])
         else:
-            scenario.with_vulnerability(float(vuln_data.get("value", 0.5)))
+            # Derived LEF from TEF and Vulnerability
 
-        # Parse Loss Magnitude
-        loss_data = data.get("loss", {})
-        if loss_data.get("type") == "pert":
-            scenario.with_primary_loss(PERTDistribution(
-                float(loss_data["min"]),
-                float(loss_data["likely"]),
-                float(loss_data["max"])
-            ))
-        elif loss_data.get("type") == "lognormal":
-            scenario.with_primary_loss(LogNormalDistribution(
-                low=float(loss_data["low"]),
-                high=float(loss_data["high"])
-            ))
+            # Handle TEF
+            if "tef" in data:
+                # Direct TEF input
+                model.tef = parse_distribution(data["tef"])
+            elif "contact_frequency" in data and "probability_of_action" in data:
+                # Derived TEF from CF and PoA
+                model.contact_frequency = parse_distribution(data["contact_frequency"])
+                model.probability_of_action = parse_distribution(data["probability_of_action"])
+            else:
+                raise ValueError("Must specify either TEF or (Contact Frequency + Probability of Action)")
+
+            # Handle Vulnerability
+            if "vulnerability" in data:
+                # Direct vulnerability input
+                model.vulnerability = parse_distribution(data["vulnerability"])
+            elif "threat_capability" in data and "resistance_strength" in data:
+                # Derived vulnerability from TCap and RS using 21x21 grid
+                tcap = data["threat_capability"]
+                rs = data["resistance_strength"]
+
+                # Calculate vulnerability using the grid simulator
+                calculated_vulnerability = calculate_vulnerability_vectorized(
+                    tcap_min=float(tcap["min"]),
+                    tcap_ml=float(tcap["likely"]),
+                    tcap_max=float(tcap["max"]),
+                    rs_min=float(rs["min"]),
+                    rs_ml=float(rs["likely"]),
+                    rs_max=float(rs["max"])
+                )
+
+                # Use the calculated vulnerability as a constant
+                model.vulnerability = ConstantDistribution(calculated_vulnerability)
+            else:
+                raise ValueError("Must specify either Vulnerability or (Threat Capability + Resistance Strength)")
+
+        # Handle Loss Magnitude inputs
+        if "loss" in data:
+            # Direct LM input
+            model.lm = parse_distribution(data["loss"])
+        elif "primary_loss" in data:
+            # Derived LM from Primary + Secondary Loss
+            model.primary_loss = parse_distribution(data["primary_loss"])
+
+            # Secondary loss is optional
+            if "secondary_loss_frequency" in data and "secondary_loss_magnitude" in data:
+                model.secondary_loss_frequency = parse_distribution(data["secondary_loss_frequency"])
+                model.secondary_loss_magnitude = parse_distribution(data["secondary_loss_magnitude"])
         else:
-            scenario.with_primary_loss(float(loss_data.get("value", 100000)))
+            raise ValueError("Must specify either Loss Magnitude or Primary Loss")
 
         # Run simulation
         iterations = int(data.get("iterations", 10000))
         sim = MonteCarloSimulation(iterations=iterations, seed=42)
-        results = sim.run(scenario.build())
+        results = sim.run(model)
 
         # Prepare response data
         summary = results.summary()
@@ -148,7 +178,40 @@ def simulate():
             "iterations": iterations,
         }
 
+        # Include calculated vulnerability if it was derived from TCap/RS
+        if calculated_vulnerability is not None:
+            response["calculated_vulnerability"] = float(calculated_vulnerability)
+
         return jsonify(response)
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({
+            "success": False,
+            "error": str(e)
+        }), 400
+
+
+@app.route("/api/vulnerability", methods=["POST"])
+def calculate_vuln():
+    """Calculate vulnerability using the 21x21 grid simulator."""
+    try:
+        data = request.json
+
+        vuln = calculate_vulnerability_vectorized(
+            tcap_min=float(data["tcap_min"]),
+            tcap_ml=float(data["tcap_likely"]),
+            tcap_max=float(data["tcap_max"]),
+            rs_min=float(data["rs_min"]),
+            rs_ml=float(data["rs_likely"]),
+            rs_max=float(data["rs_max"])
+        )
+
+        return jsonify({
+            "success": True,
+            "vulnerability": float(vuln)
+        })
 
     except Exception as e:
         return jsonify({
@@ -165,36 +228,23 @@ def compare():
 
         scenarios = []
         for scenario_data in [data.get("baseline"), data.get("alternative")]:
-            scenario = RiskScenario(scenario_data.get("name", "Scenario"))
+            model = FAIRModel(name=scenario_data.get("name", "Scenario"))
 
-            # TEF
-            tef = scenario_data.get("tef", {})
-            if tef.get("type") == "pert":
-                scenario.with_tef(PERTDistribution(
-                    float(tef["min"]), float(tef["likely"]), float(tef["max"])
-                ))
-            else:
-                scenario.with_tef(float(tef.get("value", 10)))
+            # Handle LEF
+            if "lef" in scenario_data:
+                model.lef = parse_distribution(scenario_data["lef"])
+            elif "tef" in scenario_data:
+                model.tef = parse_distribution(scenario_data["tef"])
+                if "vulnerability" in scenario_data:
+                    model.vulnerability = parse_distribution(scenario_data["vulnerability"])
 
-            # Vulnerability
-            vuln = scenario_data.get("vulnerability", {})
-            if vuln.get("type") == "pert":
-                scenario.with_vulnerability(PERTDistribution(
-                    float(vuln["min"]), float(vuln["likely"]), float(vuln["max"])
-                ))
-            else:
-                scenario.with_vulnerability(float(vuln.get("value", 0.5)))
+            # Handle LM
+            if "loss" in scenario_data:
+                model.lm = parse_distribution(scenario_data["loss"])
+            elif "primary_loss" in scenario_data:
+                model.primary_loss = parse_distribution(scenario_data["primary_loss"])
 
-            # Loss
-            loss = scenario_data.get("loss", {})
-            if loss.get("type") == "lognormal":
-                scenario.with_primary_loss(LogNormalDistribution(
-                    low=float(loss["low"]), high=float(loss["high"])
-                ))
-            else:
-                scenario.with_primary_loss(float(loss.get("value", 100000)))
-
-            scenarios.append(scenario.build())
+            scenarios.append(model)
 
         # Run comparison
         iterations = int(data.get("iterations", 10000))

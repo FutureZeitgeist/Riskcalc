@@ -26,7 +26,10 @@ function formatNumber(value, decimals = 2) {
 
 // Toggle distribution input fields
 function toggleDistribution(prefix) {
-    const type = document.getElementById(`${prefix}-type`).value;
+    const typeSelect = document.getElementById(`${prefix}-type`);
+    if (!typeSelect) return;
+
+    const type = typeSelect.value;
 
     // Hide all distribution inputs for this prefix
     const allInputs = document.querySelectorAll(`[id^="${prefix}-"][class="distribution-inputs"]`);
@@ -39,68 +42,219 @@ function toggleDistribution(prefix) {
     }
 }
 
+// Toggle LEF mode (direct vs derived)
+function toggleLEFMode() {
+    const mode = document.querySelector('input[name="lef-mode"]:checked').value;
+    document.getElementById('lef-direct').style.display = mode === 'direct' ? 'block' : 'none';
+    document.getElementById('lef-derived').style.display = mode === 'derived' ? 'block' : 'none';
+}
+
+// Toggle TEF mode (direct vs derived from CF+PoA)
+function toggleTEFMode() {
+    const mode = document.querySelector('input[name="tef-mode"]:checked').value;
+    document.getElementById('tef-direct').style.display = mode === 'direct' ? 'block' : 'none';
+    document.getElementById('tef-derived').style.display = mode === 'derived' ? 'block' : 'none';
+}
+
+// Toggle Vulnerability mode (direct vs derived from TCap+RS)
+function toggleVulnMode() {
+    const mode = document.querySelector('input[name="vuln-mode"]:checked').value;
+    document.getElementById('vuln-direct').style.display = mode === 'direct' ? 'block' : 'none';
+    document.getElementById('vuln-derived').style.display = mode === 'derived' ? 'block' : 'none';
+}
+
+// Toggle LM mode (direct vs derived)
+function toggleLMMode() {
+    const mode = document.querySelector('input[name="lm-mode"]:checked').value;
+    document.getElementById('lm-direct').style.display = mode === 'direct' ? 'block' : 'none';
+    document.getElementById('lm-derived').style.display = mode === 'derived' ? 'block' : 'none';
+}
+
+// Toggle secondary loss inputs
+function toggleSecondaryLoss() {
+    const include = document.getElementById('include-secondary').checked;
+    document.getElementById('secondary-loss-inputs').style.display = include ? 'block' : 'none';
+}
+
 // Collect form data
 function collectFormData() {
     const data = {
         name: document.getElementById('scenario-name').value,
         iterations: parseInt(document.getElementById('iterations').value),
-        tef: {},
-        vulnerability: {},
-        loss: {}
     };
 
-    // TEF
-    const tefType = document.getElementById('tef-type').value;
-    if (tefType === 'pert') {
-        data.tef = {
-            type: 'pert',
-            min: parseFloat(document.getElementById('tef-min').value),
-            likely: parseFloat(document.getElementById('tef-likely').value),
-            max: parseFloat(document.getElementById('tef-max').value)
-        };
+    // LEF Mode
+    const lefMode = document.querySelector('input[name="lef-mode"]:checked').value;
+
+    if (lefMode === 'direct') {
+        // Direct LEF input
+        const lefType = document.getElementById('lef-type').value;
+        if (lefType === 'triangular') {
+            data.lef = {
+                type: 'triangular',
+                min: parseFloat(document.getElementById('lef-min').value),
+                likely: parseFloat(document.getElementById('lef-likely').value),
+                max: parseFloat(document.getElementById('lef-max').value)
+            };
+        } else if (lefType === 'pert') {
+            data.lef = {
+                type: 'pert',
+                min: parseFloat(document.getElementById('lef-pert-min').value),
+                likely: parseFloat(document.getElementById('lef-pert-likely').value),
+                max: parseFloat(document.getElementById('lef-pert-max').value)
+            };
+        } else {
+            data.lef = {
+                type: 'constant',
+                value: parseFloat(document.getElementById('lef-value').value)
+            };
+        }
     } else {
-        data.tef = {
-            type: 'constant',
-            value: parseFloat(document.getElementById('tef-value').value)
-        };
+        // Derived LEF from TEF and Vulnerability
+
+        // TEF
+        const tefMode = document.querySelector('input[name="tef-mode"]:checked').value;
+        if (tefMode === 'direct') {
+            const tefType = document.getElementById('tef-type').value;
+            if (tefType === 'triangular') {
+                data.tef = {
+                    type: 'triangular',
+                    min: parseFloat(document.getElementById('tef-min').value),
+                    likely: parseFloat(document.getElementById('tef-likely').value),
+                    max: parseFloat(document.getElementById('tef-max').value)
+                };
+            } else if (tefType === 'pert') {
+                data.tef = {
+                    type: 'pert',
+                    min: parseFloat(document.getElementById('tef-pert-min').value),
+                    likely: parseFloat(document.getElementById('tef-pert-likely').value),
+                    max: parseFloat(document.getElementById('tef-pert-max').value)
+                };
+            } else {
+                data.tef = {
+                    type: 'constant',
+                    value: parseFloat(document.getElementById('tef-value').value)
+                };
+            }
+        } else {
+            // Derived TEF from CF and PoA
+            data.contact_frequency = {
+                type: 'triangular',
+                min: parseFloat(document.getElementById('cf-min').value),
+                likely: parseFloat(document.getElementById('cf-likely').value),
+                max: parseFloat(document.getElementById('cf-max').value)
+            };
+            data.probability_of_action = {
+                type: 'triangular',
+                min: parseFloat(document.getElementById('poa-min').value),
+                likely: parseFloat(document.getElementById('poa-likely').value),
+                max: parseFloat(document.getElementById('poa-max').value)
+            };
+        }
+
+        // Vulnerability
+        const vulnMode = document.querySelector('input[name="vuln-mode"]:checked').value;
+        if (vulnMode === 'direct') {
+            const vulnType = document.getElementById('vuln-type').value;
+            if (vulnType === 'triangular') {
+                data.vulnerability = {
+                    type: 'triangular',
+                    min: parseFloat(document.getElementById('vuln-min').value),
+                    likely: parseFloat(document.getElementById('vuln-likely').value),
+                    max: parseFloat(document.getElementById('vuln-max').value)
+                };
+            } else if (vulnType === 'pert') {
+                data.vulnerability = {
+                    type: 'pert',
+                    min: parseFloat(document.getElementById('vuln-pert-min').value),
+                    likely: parseFloat(document.getElementById('vuln-pert-likely').value),
+                    max: parseFloat(document.getElementById('vuln-pert-max').value)
+                };
+            } else {
+                data.vulnerability = {
+                    type: 'constant',
+                    value: parseFloat(document.getElementById('vuln-value').value)
+                };
+            }
+        } else {
+            // Derived Vulnerability from TCap and RS (21x21 grid)
+            data.threat_capability = {
+                type: 'triangular',
+                min: parseFloat(document.getElementById('tcap-min').value) / 100,
+                likely: parseFloat(document.getElementById('tcap-likely').value) / 100,
+                max: parseFloat(document.getElementById('tcap-max').value) / 100
+            };
+            data.resistance_strength = {
+                type: 'triangular',
+                min: parseFloat(document.getElementById('rs-min').value) / 100,
+                likely: parseFloat(document.getElementById('rs-likely').value) / 100,
+                max: parseFloat(document.getElementById('rs-max').value) / 100
+            };
+        }
     }
 
-    // Vulnerability
-    const vulnType = document.getElementById('vuln-type').value;
-    if (vulnType === 'pert') {
-        data.vulnerability = {
-            type: 'pert',
-            min: parseFloat(document.getElementById('vuln-min').value),
-            likely: parseFloat(document.getElementById('vuln-likely').value),
-            max: parseFloat(document.getElementById('vuln-max').value)
-        };
-    } else {
-        data.vulnerability = {
-            type: 'constant',
-            value: parseFloat(document.getElementById('vuln-value').value)
-        };
-    }
+    // Loss Magnitude Mode
+    const lmMode = document.querySelector('input[name="lm-mode"]:checked').value;
 
-    // Loss
-    const lossType = document.getElementById('loss-type').value;
-    if (lossType === 'lognormal') {
-        data.loss = {
-            type: 'lognormal',
-            low: parseFloat(document.getElementById('loss-low').value),
-            high: parseFloat(document.getElementById('loss-high').value)
-        };
-    } else if (lossType === 'pert') {
-        data.loss = {
-            type: 'pert',
-            min: parseFloat(document.getElementById('loss-min').value),
-            likely: parseFloat(document.getElementById('loss-likely').value),
-            max: parseFloat(document.getElementById('loss-max').value)
-        };
+    if (lmMode === 'direct') {
+        // Direct LM input
+        const lossType = document.getElementById('loss-type').value;
+        if (lossType === 'lognormal') {
+            data.loss = {
+                type: 'lognormal',
+                low: parseFloat(document.getElementById('loss-low').value),
+                high: parseFloat(document.getElementById('loss-high').value)
+            };
+        } else if (lossType === 'pert') {
+            data.loss = {
+                type: 'pert',
+                min: parseFloat(document.getElementById('loss-min').value),
+                likely: parseFloat(document.getElementById('loss-likely').value),
+                max: parseFloat(document.getElementById('loss-max').value)
+            };
+        } else {
+            data.loss = {
+                type: 'constant',
+                value: parseFloat(document.getElementById('loss-value').value)
+            };
+        }
     } else {
-        data.loss = {
-            type: 'constant',
-            value: parseFloat(document.getElementById('loss-value').value)
-        };
+        // Derived LM from Primary + Secondary Loss
+        const plType = document.getElementById('pl-type').value;
+        if (plType === 'lognormal') {
+            data.primary_loss = {
+                type: 'lognormal',
+                low: parseFloat(document.getElementById('pl-low').value),
+                high: parseFloat(document.getElementById('pl-high').value)
+            };
+        } else if (plType === 'pert') {
+            data.primary_loss = {
+                type: 'pert',
+                min: parseFloat(document.getElementById('pl-min').value),
+                likely: parseFloat(document.getElementById('pl-likely').value),
+                max: parseFloat(document.getElementById('pl-max').value)
+            };
+        } else {
+            data.primary_loss = {
+                type: 'constant',
+                value: parseFloat(document.getElementById('pl-value').value)
+            };
+        }
+
+        // Secondary loss (optional)
+        if (document.getElementById('include-secondary').checked) {
+            data.secondary_loss_frequency = {
+                type: 'triangular',
+                min: parseFloat(document.getElementById('slef-min').value),
+                likely: parseFloat(document.getElementById('slef-likely').value),
+                max: parseFloat(document.getElementById('slef-max').value)
+            };
+            data.secondary_loss_magnitude = {
+                type: 'lognormal',
+                low: parseFloat(document.getElementById('slm-low').value),
+                high: parseFloat(document.getElementById('slm-high').value)
+            };
+        }
     }
 
     return data;
@@ -130,6 +284,15 @@ function displayResults(data) {
     document.getElementById('result-min').textContent = formatCurrency(data.summary.min);
     document.getElementById('result-max').textContent = formatCurrency(data.summary.max);
     document.getElementById('result-std').textContent = formatCurrency(data.summary.std);
+
+    // Show calculated vulnerability if derived from TCap/RS
+    const vulnResultDiv = document.getElementById('vuln-result');
+    if (data.calculated_vulnerability !== undefined) {
+        vulnResultDiv.style.display = 'block';
+        document.getElementById('calc-vuln').textContent = (data.calculated_vulnerability * 100).toFixed(1) + '%';
+    } else {
+        vulnResultDiv.style.display = 'none';
+    }
 
     // Update charts
     updateHistogramChart(data.histogram);
@@ -312,7 +475,16 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('risk-form').addEventListener('submit', runSimulation);
 
     // Initialize distribution toggles
+    toggleDistribution('lef');
     toggleDistribution('tef');
     toggleDistribution('vuln');
     toggleDistribution('loss');
+    toggleDistribution('pl');
+
+    // Initialize mode toggles
+    toggleLEFMode();
+    toggleTEFMode();
+    toggleVulnMode();
+    toggleLMMode();
+    toggleSecondaryLoss();
 });
