@@ -1,3 +1,28 @@
+1. Intelligent Interpretation 
+
+Visual Insights: Leverages a sleek Tableau integration to provide interactive, high-fidelity visualizations of risk scenarios.
+
+Natural Language Generation: Uses the Gemini Large Language Model to translate complex statistical outputs into Plain English summaries for non-technical stakeholders.
+
+Dynamic Simulation: Users can adjust input variables in real-time to view corresponding scenario outputs and "What-If" financial impacts.
+
+2. Platform-Specific Secondary Loss
+
+Tailored specifically to the Roblox business model, this model quantifies the ripple effects of cybersecurity incidents on:
+
+Cash Flow: Immediate disruptions to Robux bookings and liquidity.
+
+Revenue Recognition Velocity: Impact on the 27-month accrual schedule for deferred revenue.
+
+Community Health: Modeling customer engagement drops, player churn, and the "Trust Tax" on creator investment.
+
+3. Scientific Rigor
+
+This expansion is built to avoid classic risk quantification traps. It prioritizes Accuracy over Precision and utilizes calibrated estimates to ensure the model provides a meaningful range of outcomes rather than misleadingly exact numbers or useless ordinal scales (e.g., "High/Medium/Low").
+
+PRD.md: Detailed user stories and product features. 
+ROADMAP.md: Phased plan for Tableau and Gemini Large Language Model integration. 
+-------------------------------------------------------------------------
 # Open FAIR Monte Carlo Calculator
 
 A Python implementation of the Open FAIR (Factor Analysis of Information Risk) framework using Monte Carlo simulation for quantitative risk analysis.
