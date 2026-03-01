@@ -1,0 +1,20 @@
+{
+    "name": "Insider Threat",
+    "tef": {
+        "type": "pert",
+        "minimum": 2,
+        "most_likely": 5,
+        "maximum": 15
+    },
+    "vulnerability": {
+        "type": "pert",
+        "minimum": 0.2,
+        "most_likely": 0.4,
+        "maximum": 0.6
+    },
+    "primary_loss": {
+        "type": "lognormal",
+        "low": 100000,
+        "high": 1000000
+    }
+}
