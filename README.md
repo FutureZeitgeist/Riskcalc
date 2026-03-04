@@ -26,7 +26,7 @@ Key markdown files:
 
 
 
-END FUTUREZEITGEIST EDIT
+==END FUTUREZEITGEIST EDIT==
 -------------------------------------------------------------------------
 # Open FAIR Monte Carlo Calculator
 
