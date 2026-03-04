@@ -22,6 +22,8 @@
 
 PRD.md: Detailed user stories and product features. 
 ROADMAP.md: Phased plan for Tableau and Gemini Large Language Model integration. 
+
+END FUTUREZEITGEIST EDIT
 -------------------------------------------------------------------------
 # Open FAIR Monte Carlo Calculator
 
