@@ -20,8 +20,11 @@
 
 	This expansion is built to avoid classic risk quantification traps (precision, accuracy, ordinal number etc.) leveraging calibrated estimates to ensure 	a meaningful range of outcomes.
 
-PRD.md: Detailed user stories and product features. 
-ROADMAP.md: Phased plan for Tableau and Gemini Large Language Model integration. 
+Key markdown files:
+1) PRD.md: Detailed user stories and product features. 
+2) ROADMAP.md: Phased plan for Tableau and Gemini Large Language Model integration. 
+
+
 
 END FUTUREZEITGEIST EDIT
 -------------------------------------------------------------------------
