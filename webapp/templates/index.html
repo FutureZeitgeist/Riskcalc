@@ -15,7 +15,6 @@
         </header>
 
         <main>
-            <!-- Scenario Management Bar -->
             <div class="card scenario-management">
                 <h3>Scenario Management</h3>
                 <div class="scenario-controls">
@@ -48,7 +47,6 @@
                         <textarea id="scenario-description" rows="2" placeholder="Brief description of the scenario..."></textarea>
                     </div>
 
-                    <!-- LOSS EVENT FREQUENCY SECTION -->
                     <div class="form-section taxonomy-section">
                         <h3>Loss Event Frequency (LEF)</h3>
                         <p class="help-text">Expected number of loss events per year</p>
@@ -64,7 +62,6 @@
                             </label>
                         </div>
 
-                        <!-- Direct LEF Input -->
                         <div id="lef-direct" class="taxonomy-content">
                             <div class="distribution-select">
                                 <label>Distribution Type:</label>
@@ -117,404 +114,80 @@
                             </div>
                         </div>
 
-                        <!-- Derived LEF (TEF + Vulnerability) -->
                         <div id="lef-derived" class="taxonomy-content" style="display: none;">
-
-                            <!-- TEF Section -->
                             <div class="subsection">
                                 <h4>Threat Event Frequency (TEF)</h4>
-                                <p class="help-text">How many times per year do threats attempt to act against assets?</p>
-
                                 <div class="taxonomy-toggle">
-                                    <label>
-                                        <input type="radio" name="tef-mode" value="direct" checked onchange="toggleTEFMode()">
-                                        Enter TEF directly
-                                    </label>
-                                    <label>
-                                        <input type="radio" name="tef-mode" value="derived" onchange="toggleTEFMode()">
-                                        Derive from CF and PoA
-                                    </label>
+                                    <label><input type="radio" name="tef-mode" value="direct" checked onchange="toggleTEFMode()"> Direct</label>
+                                    <label><input type="radio" name="tef-mode" value="derived" onchange="toggleTEFMode()"> Derived</label>
                                 </div>
-
-                                <!-- Direct TEF -->
-                                <div id="tef-direct" class="taxonomy-content">
-                                    <div class="distribution-select">
-                                        <label>Distribution Type:</label>
-                                        <select id="tef-type" onchange="toggleDistribution('tef')">
-                                            <option value="triangular">Triangular (Min/Likely/Max)</option>
-                                            <option value="pert">PERT (Min/Likely/Max)</option>
-                                            <option value="constant">Constant Value</option>
-                                        </select>
+                                <div id="tef-direct">
+                                    <div class="input-row">
+                                        <div class="input-group"><label>Min</label><input type="number" id="tef-min" value="5"></div>
+                                        <div class="input-group"><label>Likely</label><input type="number" id="tef-likely" value="10"></div>
+                                        <div class="input-group"><label>Max</label><input type="number" id="tef-max" value="20"></div>
                                     </div>
-
-                                    <div id="tef-triangular" class="distribution-inputs">
-                                        <div class="input-row">
-                                            <div class="input-group">
-                                                <label>Minimum</label>
-                                                <input type="number" id="tef-min" value="5" step="0.1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Most Likely</label>
-                                                <input type="number" id="tef-likely" value="10" step="0.1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Maximum</label>
-                                                <input type="number" id="tef-max" value="20" step="0.1">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div id="tef-pert" class="distribution-inputs" style="display: none;">
-                                        <div class="input-row">
-                                            <div class="input-group">
-                                                <label>Minimum</label>
-                                                <input type="number" id="tef-pert-min" value="5" step="0.1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Most Likely</label>
-                                                <input type="number" id="tef-pert-likely" value="10" step="0.1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Maximum</label>
-                                                <input type="number" id="tef-pert-max" value="20" step="0.1">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div id="tef-constant" class="distribution-inputs" style="display: none;">
-                                        <div class="input-group">
-                                            <label>Value (events/year)</label>
-                                            <input type="number" id="tef-value" value="10" step="0.1">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Derived TEF (CF + PoA) -->
-                                <div id="tef-derived" class="taxonomy-content" style="display: none;">
-                                    <div class="derived-inputs">
-                                        <div class="derived-input-group">
-                                            <label><strong>Contact Frequency (CF)</strong></label>
-                                            <p class="help-text small">Times per year threats contact the asset</p>
-                                            <div class="input-row">
-                                                <div class="input-group">
-                                                    <label>Min</label>
-                                                    <input type="number" id="cf-min" value="50" step="1">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Likely</label>
-                                                    <input type="number" id="cf-likely" value="100" step="1">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Max</label>
-                                                    <input type="number" id="cf-max" value="200" step="1">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="derived-input-group">
-                                            <label><strong>Probability of Action (PoA)</strong></label>
-                                            <p class="help-text small">Probability threat acts when it contacts (0-1)</p>
-                                            <div class="input-row">
-                                                <div class="input-group">
-                                                    <label>Min</label>
-                                                    <input type="number" id="poa-min" value="0.05" step="0.01" min="0" max="1">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Likely</label>
-                                                    <input type="number" id="poa-likely" value="0.10" step="0.01" min="0" max="1">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Max</label>
-                                                    <input type="number" id="poa-max" value="0.20" step="0.01" min="0" max="1">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <!-- Vulnerability Section -->
-                            <div class="subsection">
-                                <h4>Vulnerability</h4>
-                                <p class="help-text">Probability that a threat event results in a loss (0-1)</p>
-
-                                <div class="taxonomy-toggle">
-                                    <label>
-                                        <input type="radio" name="vuln-mode" value="direct" checked onchange="toggleVulnMode()">
-                                        Enter Vulnerability directly
-                                    </label>
-                                    <label>
-                                        <input type="radio" name="vuln-mode" value="derived" onchange="toggleVulnMode()">
-                                        Derive from TCap and RS (21x21 grid)
-                                    </label>
-                                </div>
-
-                                <!-- Direct Vulnerability -->
-                                <div id="vuln-direct" class="taxonomy-content">
-                                    <div class="distribution-select">
-                                        <label>Distribution Type:</label>
-                                        <select id="vuln-type" onchange="toggleDistribution('vuln')">
-                                            <option value="triangular">Triangular (Min/Likely/Max)</option>
-                                            <option value="pert">PERT (Min/Likely/Max)</option>
-                                            <option value="constant">Constant Value</option>
-                                        </select>
-                                    </div>
-
-                                    <div id="vuln-triangular" class="distribution-inputs">
-                                        <div class="input-row">
-                                            <div class="input-group">
-                                                <label>Minimum</label>
-                                                <input type="number" id="vuln-min" value="0.1" step="0.01" min="0" max="1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Most Likely</label>
-                                                <input type="number" id="vuln-likely" value="0.25" step="0.01" min="0" max="1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Maximum</label>
-                                                <input type="number" id="vuln-max" value="0.5" step="0.01" min="0" max="1">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div id="vuln-pert" class="distribution-inputs" style="display: none;">
-                                        <div class="input-row">
-                                            <div class="input-group">
-                                                <label>Minimum</label>
-                                                <input type="number" id="vuln-pert-min" value="0.1" step="0.01" min="0" max="1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Most Likely</label>
-                                                <input type="number" id="vuln-pert-likely" value="0.25" step="0.01" min="0" max="1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Maximum</label>
-                                                <input type="number" id="vuln-pert-max" value="0.5" step="0.01" min="0" max="1">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div id="vuln-constant" class="distribution-inputs" style="display: none;">
-                                        <div class="input-group">
-                                            <label>Value (0-1)</label>
-                                            <input type="number" id="vuln-value" value="0.25" step="0.01" min="0" max="1">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Derived Vulnerability (TCap vs RS) -->
-                                <div id="vuln-derived" class="taxonomy-content" style="display: none;">
-                                    <div class="info-box">
-                                        Uses the Open FAIR 21x21 grid simulator to calculate vulnerability
-                                        by comparing Threat Capability against Resistance Strength distributions.
-                                    </div>
-                                    <div class="derived-inputs">
-                                        <div class="derived-input-group">
-                                            <label><strong>Threat Capability (TCap)</strong></label>
-                                            <p class="help-text small">Threat actor's capability level (0-100%)</p>
-                                            <div class="input-row">
-                                                <div class="input-group">
-                                                    <label>Min %</label>
-                                                    <input type="number" id="tcap-min" value="15" step="1" min="0" max="100">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Likely %</label>
-                                                    <input type="number" id="tcap-likely" value="55" step="1" min="0" max="100">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Max %</label>
-                                                    <input type="number" id="tcap-max" value="65" step="1" min="0" max="100">
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div class="derived-input-group">
-                                            <label><strong>Resistance Strength (RS)</strong></label>
-                                            <p class="help-text small">Control effectiveness level (0-100%)</p>
-                                            <div class="input-row">
-                                                <div class="input-group">
-                                                    <label>Min %</label>
-                                                    <input type="number" id="rs-min" value="10" step="1" min="0" max="100">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Likely %</label>
-                                                    <input type="number" id="rs-likely" value="50" step="1" min="0" max="100">
-                                                </div>
-                                                <div class="input-group">
-                                                    <label>Max %</label>
-                                                    <input type="number" id="rs-max" value="60" step="1" min="0" max="100">
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div id="vuln-preview" class="vuln-preview"></div>
                                 </div>
                             </div>
                         </div>
                     </div>
 
-                    <!-- LOSS MAGNITUDE SECTION -->
-                    <div class="form-section taxonomy-section">
-                        <h3>Loss Magnitude (LM)</h3>
-                        <p class="help-text">Financial impact per loss event ($)</p>
-
-                        <div class="taxonomy-toggle">
-                            <label>
-                                <input type="radio" name="lm-mode" value="direct" checked onchange="toggleLMMode()">
-                                Enter Loss Magnitude directly
-                            </label>
-                            <label>
-                                <input type="radio" name="lm-mode" value="derived" onchange="toggleLMMode()">
-                                Derive from Primary + Secondary Loss
-                            </label>
+                    <div class="form-section taxonomy-section advanced-roblox-section">
+                        <h3>Roblox Advanced Parameters (2026)</h3>
+                        <p class="help-text">Demographic-specific monetization & seasonality impact</p>
+                        
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="daus">Daily Active Users (DAU)</label>
+                                <input type="number" id="daus" name="daus" value="88000000">
+                                <span class="help-text small">Standard: ~88M</span>
+                            </div>
+                            <div class="input-group">
+                                <label for="abpdau">ABPDAU ($)</label>
+                                <input type="number" id="abpdau" name="abpdau" value="17.88" step="0.01">
+                                <span class="help-text small">18-34: ~$70.00</span>
+                            </div>
                         </div>
 
-                        <!-- Direct LM Input -->
-                        <div id="lm-direct" class="taxonomy-content">
-                            <div class="distribution-select">
-                                <label>Distribution Type:</label>
-                                <select id="loss-type" onchange="toggleDistribution('loss')">
-                                    <option value="lognormal">Log-Normal (Low/High Percentiles)</option>
-                                    <option value="pert">PERT (Min/Likely/Max)</option>
-                                    <option value="constant">Constant Value</option>
+                        <div class="input-row">
+                            <div class="input-group">
+                                <label for="cohort">Target Cohort</label>
+                                <select id="cohort" name="cohort">
+                                    <option value="18-34" selected>18-34 (Whale)</option>
+                                    <option value="U13">Under 13 (Safety Risk)</option>
+                                    <option value="mixed">General</option>
                                 </select>
                             </div>
-
-                            <div id="loss-lognormal" class="distribution-inputs">
-                                <div class="input-row">
-                                    <div class="input-group">
-                                        <label>10th Percentile ($)</label>
-                                        <input type="number" id="loss-low" value="50000" step="1000">
-                                    </div>
-                                    <div class="input-group">
-                                        <label>90th Percentile ($)</label>
-                                        <input type="number" id="loss-high" value="500000" step="1000">
-                                    </div>
-                                </div>
+                            <div class="input-group">
+                                <label for="gender">Gender Skew</label>
+                                <select id="gender" name="gender">
+                                    <option value="mixed" selected>Mixed</option>
+                                    <option value="female">Female (High Churn)</option>
+                                    <option value="male">Male</option>
+                                </select>
                             </div>
-
-                            <div id="loss-pert" class="distribution-inputs" style="display: none;">
-                                <div class="input-row">
-                                    <div class="input-group">
-                                        <label>Minimum ($)</label>
-                                        <input type="number" id="loss-min" value="10000" step="1000">
-                                    </div>
-                                    <div class="input-group">
-                                        <label>Most Likely ($)</label>
-                                        <input type="number" id="loss-likely" value="100000" step="1000">
-                                    </div>
-                                    <div class="input-group">
-                                        <label>Maximum ($)</label>
-                                        <input type="number" id="loss-max" value="500000" step="1000">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div id="loss-constant" class="distribution-inputs" style="display: none;">
-                                <div class="input-group">
-                                    <label>Value ($)</label>
-                                    <input type="number" id="loss-value" value="100000" step="1000">
-                                </div>
+                            <div class="input-group">
+                                <label for="month">Attack Month</label>
+                                <select id="month" name="month">
+                                    <option value="1">January</option>
+                                    <option value="6">June (Peak)</option>
+                                    <option value="12" selected>December (Peak)</option>
+                                </select>
                             </div>
                         </div>
+                    </div>
 
-                        <!-- Derived LM (Primary + Secondary) -->
-                        <div id="lm-derived" class="taxonomy-content" style="display: none;">
-                            <div class="subsection">
-                                <h4>Primary Loss</h4>
-                                <p class="help-text">Direct losses from the event (productivity, response, replacement, etc.)</p>
-                                <div class="distribution-select">
-                                    <label>Distribution Type:</label>
-                                    <select id="pl-type" onchange="toggleDistribution('pl')">
-                                        <option value="lognormal">Log-Normal (Low/High Percentiles)</option>
-                                        <option value="pert">PERT (Min/Likely/Max)</option>
-                                        <option value="constant">Constant Value</option>
-                                    </select>
+                    <div class="form-section taxonomy-section">
+                        <h3>Loss Magnitude (LM)</h3>
+                        <div id="lm-direct" class="taxonomy-content">
+                            <div class="input-row">
+                                <div class="input-group">
+                                    <label>10th %ile ($)</label>
+                                    <input type="number" id="loss-low" value="50000">
                                 </div>
-
-                                <div id="pl-lognormal" class="distribution-inputs">
-                                    <div class="input-row">
-                                        <div class="input-group">
-                                            <label>10th Percentile ($)</label>
-                                            <input type="number" id="pl-low" value="25000" step="1000">
-                                        </div>
-                                        <div class="input-group">
-                                            <label>90th Percentile ($)</label>
-                                            <input type="number" id="pl-high" value="250000" step="1000">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="pl-pert" class="distribution-inputs" style="display: none;">
-                                    <div class="input-row">
-                                        <div class="input-group">
-                                            <label>Minimum ($)</label>
-                                            <input type="number" id="pl-min" value="10000" step="1000">
-                                        </div>
-                                        <div class="input-group">
-                                            <label>Most Likely ($)</label>
-                                            <input type="number" id="pl-likely" value="75000" step="1000">
-                                        </div>
-                                        <div class="input-group">
-                                            <label>Maximum ($)</label>
-                                            <input type="number" id="pl-max" value="300000" step="1000">
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <div id="pl-constant" class="distribution-inputs" style="display: none;">
-                                    <div class="input-group">
-                                        <label>Value ($)</label>
-                                        <input type="number" id="pl-value" value="75000" step="1000">
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="subsection">
-                                <h4>Secondary Loss</h4>
-                                <p class="help-text">Losses from secondary stakeholder reactions (reputation, legal, regulatory)</p>
-
-                                <div class="checkbox-group">
-                                    <label>
-                                        <input type="checkbox" id="include-secondary" onchange="toggleSecondaryLoss()">
-                                        Include Secondary Loss
-                                    </label>
-                                </div>
-
-                                <div id="secondary-loss-inputs" style="display: none;">
-                                    <div class="derived-input-group">
-                                        <label><strong>Secondary Loss Event Frequency (SLEF)</strong></label>
-                                        <p class="help-text small">Probability that secondary loss occurs (0-1)</p>
-                                        <div class="input-row">
-                                            <div class="input-group">
-                                                <label>Min</label>
-                                                <input type="number" id="slef-min" value="0.1" step="0.01" min="0" max="1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Likely</label>
-                                                <input type="number" id="slef-likely" value="0.3" step="0.01" min="0" max="1">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>Max</label>
-                                                <input type="number" id="slef-max" value="0.6" step="0.01" min="0" max="1">
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <div class="derived-input-group">
-                                        <label><strong>Secondary Loss Magnitude (SLM)</strong></label>
-                                        <p class="help-text small">Financial impact of secondary loss ($)</p>
-                                        <div class="input-row">
-                                            <div class="input-group">
-                                                <label>10th %ile ($)</label>
-                                                <input type="number" id="slm-low" value="50000" step="1000">
-                                            </div>
-                                            <div class="input-group">
-                                                <label>90th %ile ($)</label>
-                                                <input type="number" id="slm-high" value="500000" step="1000">
-                                            </div>
-                                        </div>
-                                    </div>
+                                <div class="input-group">
+                                    <label>90th %ile ($)</label>
+                                    <input type="number" id="loss-high" value="500000">
                                 </div>
                             </div>
                         </div>
@@ -522,127 +195,22 @@
 
                     <div class="form-section">
                         <h3>Simulation Settings</h3>
-
-                        <div class="form-group">
-                            <label>Analysis Type</label>
-                            <div class="taxonomy-toggle">
-                                <label>
-                                    <input type="radio" name="analysis-mode" value="ale" checked onchange="toggleAnalysisMode()">
-                                    Annualized Loss (ALE)
-                                </label>
-                                <label>
-                                    <input type="radio" name="analysis-mode" value="sle" onchange="toggleAnalysisMode()">
-                                    Single Loss Event (SLE)
-                                </label>
-                            </div>
-                            <p class="help-text" id="analysis-mode-help">ALE = LEF &times; LM &mdash; expected annual loss across all events</p>
-                        </div>
-
                         <div class="input-group">
                             <label>Iterations</label>
                             <select id="iterations">
-                                <option value="1000">1,000 (Fast)</option>
-                                <option value="10000" selected>10,000 (Standard)</option>
-                                <option value="50000">50,000 (High Precision)</option>
-                                <option value="100000">100,000 (Very High Precision)</option>
+                                <option value="1000">1,000</option>
+                                <option value="10000" selected>10,000</option>
                             </select>
                         </div>
                     </div>
 
                     <div class="button-row">
-                        <button type="submit" class="btn-primary" id="run-btn">
-                            Run Simulation
-                        </button>
+                        <button type="submit" class="btn-primary" id="run-btn">Run Simulation</button>
                         <label class="checkbox-inline">
-                            <input type="checkbox" id="save-result-checkbox">
-                            Save result to history
+                            <input type="checkbox" id="save-result-checkbox"> Save to history
                         </label>
                     </div>
                 </form>
             </div>
 
-            <div id="results" class="card results-card" style="display: none;">
-                <h2 id="results-title">Results</h2>
-
-                <div class="results-summary">
-                    <div class="stat-card primary">
-                        <div class="stat-label" id="label-mean">Mean Annual Loss</div>
-                        <div class="stat-value" id="result-mean">-</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label" id="label-median">Median Annual Loss</div>
-                        <div class="stat-value" id="result-median">-</div>
-                    </div>
-                    <div class="stat-card warning">
-                        <div class="stat-label">95% VaR</div>
-                        <div class="stat-value" id="result-var">-</div>
-                    </div>
-                    <div class="stat-card danger">
-                        <div class="stat-label">95% CVaR</div>
-                        <div class="stat-value" id="result-cvar">-</div>
-                    </div>
-                </div>
-
-                <div class="results-details">
-                    <div class="detail-section">
-                        <h3>Percentiles</h3>
-                        <table class="results-table">
-                            <tr><td>10th Percentile</td><td id="result-p10">-</td></tr>
-                            <tr><td>25th Percentile</td><td id="result-p25">-</td></tr>
-                            <tr><td>75th Percentile</td><td id="result-p75">-</td></tr>
-                            <tr><td>90th Percentile</td><td id="result-p90">-</td></tr>
-                            <tr><td>95th Percentile</td><td id="result-p95">-</td></tr>
-                        </table>
-                    </div>
-                    <div class="detail-section">
-                        <h3>Components</h3>
-                        <table class="results-table">
-                            <tr id="result-lef-row"><td>Mean LEF</td><td id="result-lef">-</td></tr>
-                            <tr><td>Mean Loss Magnitude</td><td id="result-lm">-</td></tr>
-                            <tr><td id="label-min">Minimum ALE</td><td id="result-min">-</td></tr>
-                            <tr><td id="label-max">Maximum ALE</td><td id="result-max">-</td></tr>
-                            <tr><td>Std Deviation</td><td id="result-std">-</td></tr>
-                        </table>
-                    </div>
-                </div>
-
-                <div id="vuln-result" class="info-box" style="display: none;">
-                    <strong>Calculated Vulnerability:</strong> <span id="calc-vuln">-</span>
-                    <p class="help-text small">Derived from TCap vs RS using the Open FAIR 21x21 grid algorithm</p>
-                </div>
-
-                <div class="charts-container">
-                    <div class="chart-wrapper">
-                        <h3 id="histogram-title">Loss Distribution</h3>
-                        <canvas id="histogram-chart"></canvas>
-                    </div>
-                    <div class="chart-wrapper">
-                        <h3 id="exceedance-title">Loss Exceedance Curve</h3>
-                        <canvas id="exceedance-chart"></canvas>
-                    </div>
-                </div>
-
-                <div id="result-saved-info" class="info-box success" style="display: none;">
-                    Result saved to history. <a href="#" id="view-history-link">View history</a>
-                </div>
-            </div>
-
-            <!-- Simulation History Panel -->
-            <div id="history-panel" class="card" style="display: none;">
-                <h2>Simulation History</h2>
-                <p class="help-text">Past simulation results for this scenario</p>
-                <div id="history-list" class="history-list">
-                    <p class="empty-state">No simulation history available</p>
-                </div>
-                <button type="button" class="btn-secondary" id="close-history-btn">Close</button>
-            </div>
-        </main>
-
-        <footer>
-            <p>Based on the Open FAIR framework (O-RA G181) for quantitative risk analysis</p>
-        </footer>
-    </div>
-
-    <script src="{{ url_for('static', filename='js/app.js') }}"></script>
-</body>
-</html>
+            <div id="results" class="card results-card"
