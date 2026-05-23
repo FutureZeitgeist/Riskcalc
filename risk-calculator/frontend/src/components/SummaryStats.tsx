@@ -1,9 +1,14 @@
 import { fmtUsd } from "../lib/compute";
 import { SimResult } from "../lib/state";
 
-type Props = { summary: SimResult["summary"]; iterations: number };
+type Props = {
+  summary: SimResult["summary"];
+  iterations: number;
+  materiality?: number;
+  probExceed?: number;
+};
 
-export default function SummaryStats({ summary, iterations }: Props) {
+export default function SummaryStats({ summary, iterations, materiality, probExceed }: Props) {
   const rows: [string, number, string?][] = [
     ["Mean ALE", summary.mean],
     ["Median ALE", summary.median],
@@ -21,8 +26,14 @@ export default function SummaryStats({ summary, iterations }: Props) {
         percent chance of exceeding{" "}
         <span className="text-ink">{fmtUsd(summary.var_95)}</span>. The expected
         loss in the worst five percent of years averages{" "}
-        <span className="text-ink">{fmtUsd(summary.cvar_95)}</span>. Results are
-        based on {iterations.toLocaleString()} Monte Carlo iterations.
+        <span className="text-ink">{fmtUsd(summary.cvar_95)}</span>.{" "}
+        {materiality !== undefined && probExceed !== undefined && (
+          <>
+            There is a {probExceed.toFixed(1)} percent chance of exceeding the
+            materiality threshold of {fmtUsd(materiality)}.{" "}
+          </>
+        )}
+        Results are based on {iterations.toLocaleString()} Monte Carlo iterations.
       </div>
       <table className="w-full border-collapse border-2 border-ink table-fixed bg-canvas">
         <thead>

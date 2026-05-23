@@ -1,5 +1,6 @@
 import { InputKey, ScenarioMetaKey, useStore } from "../lib/state";
 import { simulate } from "../lib/api";
+import { computedMateriality, METRIC_OPTIONS } from "./MaterialityInput";
 
 const SCOPE_ROWS: { key: ScenarioMetaKey; label: string }[] = [
   { key: "scenarioNumber",  label: "Scenario Number" },
@@ -40,8 +41,13 @@ export default function ScenarioSummary() {
   const inputs = useStore((s) => s.inputs);
   const iterations = useStore((s) => s.iterations);
   const running = useStore((s) => s.running);
+  const materiality = useStore((s) => s.materiality);
   const setResult = useStore((s) => s.setResult);
   const setRunning = useStore((s) => s.setRunning);
+
+  const matComputed = computedMateriality(materiality);
+  const basisLabel =
+    METRIC_OPTIONS.find((o) => o.value === materiality.metric)?.label ?? materiality.metric;
 
   const runScenario = async (alsoPrint: boolean) => {
     setRunning(true);
@@ -111,6 +117,41 @@ export default function ScenarioSummary() {
                 {fmt(key, inputs[key].likely)}
               </td>
             ))}
+          </tr>
+        </tbody>
+      </table>
+
+      <table className="w-full border-collapse border-2 border-ink table-fixed bg-canvas">
+        <thead>
+          <tr>
+            <th className="border border-ink px-2 py-2 text-sm font-bold text-ink bg-panel-grey text-center leading-tight">
+              Materiality Basis
+            </th>
+            <th className="border border-ink px-2 py-2 text-sm font-bold text-ink bg-panel-grey text-center leading-tight">
+              Reference Value
+            </th>
+            <th className="border border-ink px-2 py-2 text-sm font-bold text-ink bg-panel-grey text-center leading-tight">
+              Percent Threshold
+            </th>
+            <th className="border border-ink px-2 py-2 text-sm font-bold text-ink bg-panel-grey text-center leading-tight">
+              Computed Materiality
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td className="border border-ink px-2 py-2 text-sm font-bold text-ink text-center">
+              {basisLabel}
+            </td>
+            <td className="border border-ink px-2 py-2 text-sm font-bold text-ink text-center">
+              {`$${Math.round(materiality.value).toLocaleString("en-US")}`}
+            </td>
+            <td className="border border-ink px-2 py-2 text-sm font-bold text-ink text-center">
+              {materiality.metric === "manual" ? "—" : `${materiality.threshold}%`}
+            </td>
+            <td className="border border-ink px-2 py-2 text-sm font-bold text-ink text-center">
+              {`$${Math.round(matComputed).toLocaleString("en-US")}`}
+            </td>
           </tr>
         </tbody>
       </table>

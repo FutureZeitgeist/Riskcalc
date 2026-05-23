@@ -1,20 +1,32 @@
 import { useState } from "react";
-import { SimResult } from "../lib/state";
+import { SimResult, useStore } from "../lib/state";
 import SummaryStats from "./SummaryStats";
 import Histogram from "./Histogram";
 import ExceedanceCurve from "./ExceedanceCurve";
+import { computedMateriality } from "./MaterialityInput";
 
 type Props = { result: SimResult };
 
 export default function ResultsView({ result }: Props) {
   const [histHover, setHistHover] = useState<string | null>(null);
   const [exHover, setExHover] = useState<string | null>(null);
+  const materiality = useStore((s) => s.materiality);
+  const matValue = computedMateriality(materiality);
+
+  const totalCount = result.histogram.counts.reduce((a, b) => a + b, 0);
+  const exceedCount = result.histogram.counts.reduce(
+    (acc, c, i) => acc + (result.histogram.bins[i] >= matValue ? c : 0),
+    0
+  );
+  const probExceed = totalCount > 0 ? (exceedCount / totalCount) * 100 : 0;
 
   return (
     <div className="space-y-4">
       <SummaryStats
         summary={result.summary}
         iterations={result.iterations}
+        materiality={matValue}
+        probExceed={probExceed}
       />
 
       <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
@@ -33,6 +45,7 @@ export default function ResultsView({ result }: Props) {
           <Histogram
             counts={result.histogram.counts}
             bins={result.histogram.bins}
+            materiality={matValue}
             onHover={setHistHover}
           />
         </div>
@@ -54,6 +67,7 @@ export default function ResultsView({ result }: Props) {
           <ExceedanceCurve
             values={result.exceedance.values}
             probabilities={result.exceedance.probabilities}
+            materiality={matValue}
             onHover={setExHover}
           />
         </div>

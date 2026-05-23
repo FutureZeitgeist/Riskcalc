@@ -54,6 +54,11 @@
     "apa": "U.S. Securities and Exchange Commission. (2023). Cybersecurity Risk Management, Strategy, Governance, and Incident Disclosure. Final Rule. https://www.sec.gov/files/rules/final/2023/33-11216.pdf",
     "url": "https://www.sec.gov/files/rules/final/2023/33-11216.pdf"
   },
+  "sec-sab-99": {
+    "id": "sec-sab-99",
+    "apa": "U.S. Securities and Exchange Commission. (1999). Staff Accounting Bulletin No. 99 — Materiality. Office of the Chief Accountant. https://www.sec.gov/interps/account/sab99.htm",
+    "url": "https://www.sec.gov/interps/account/sab99.htm"
+  },
   "open-fair": {
     "id": "open-fair",
     "apa": "The Open Group. (2021). The Open FAIR Body of Knowledge. The Open Group. https://www.opengroup.org/forum/security/riskmanagement",

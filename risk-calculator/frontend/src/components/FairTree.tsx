@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { useStore } from "../lib/state";
 import {
   fmtCount,
@@ -13,29 +14,32 @@ import {
 import TreeNode from "./TreeNode";
 import ScenarioTable from "./ScenarioTable";
 import Toggle from "./Toggle";
+import MaterialityInput from "./MaterialityInput";
 
 const CANVAS_W = 1570;
-const CANVAS_H = 740;
-const COLLAPSED_H = 200;
+const CANVAS_H = 870;
+const COLLAPSED_H = 320;
 
 const SCOPE_LABEL_Y = 8;
 const TABLE = { x: 165, y: 44, width: 1240, height: 80 };
-const TREE_LABEL_Y = 152;
+const MATERIALITY_LABEL_Y = 140;
+const MATERIALITY_Y = 176;
+const TREE_LABEL_Y = 282;
 
 const POS = {
-  risk:    { x: 785,  y: 230 },
-  lef:     { x: 460,  y: 360 },
-  lm:      { x: 1110, y: 360 },
-  tef:     { x: 215,  y: 500 },
-  vuln:    { x: 705,  y: 500 },
-  pl:      { x: 995,  y: 500 },
-  sl:      { x: 1225, y: 500 },
-  cf:      { x: 105,  y: 650 },
-  poa:     { x: 325,  y: 650 },
-  tc:      { x: 595,  y: 650 },
-  rs:      { x: 815,  y: 650 },
-  slef:    { x: 1115, y: 650 },
-  slm:     { x: 1335, y: 650 },
+  risk:    { x: 785,  y: 360 },
+  lef:     { x: 460,  y: 490 },
+  lm:      { x: 1110, y: 490 },
+  tef:     { x: 215,  y: 630 },
+  vuln:    { x: 705,  y: 630 },
+  pl:      { x: 995,  y: 630 },
+  sl:      { x: 1225, y: 630 },
+  cf:      { x: 105,  y: 780 },
+  poa:     { x: 325,  y: 780 },
+  tc:      { x: 595,  y: 780 },
+  rs:      { x: 815,  y: 780 },
+  slef:    { x: 1115, y: 780 },
+  slm:     { x: 1335, y: 780 },
 } as const;
 
 type Op = "x" | "+" | "MC";
@@ -76,10 +80,35 @@ export default function FairTree() {
   const lm = rollupLm(inputs.primaryLoss, sl);
   const risk = rollupRisk(lef, lm);
 
+  const wrapperRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    const update = () => {
+      if (!wrapperRef.current) return;
+      const w = wrapperRef.current.offsetWidth;
+      setScale(w / CANVAS_W);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    if (wrapperRef.current) ro.observe(wrapperRef.current);
+    return () => ro.disconnect();
+  }, []);
+
+  const currentH = treeHidden ? COLLAPSED_H : CANVAS_H;
+
   return (
     <div
-      className="relative mx-auto"
-      style={{ width: CANVAS_W, height: treeHidden ? COLLAPSED_H : CANVAS_H }}
+      ref={wrapperRef}
+      style={{ width: "100%", height: currentH * scale }}
+      className="relative overflow-hidden"
+    >
+    <div
+      className="relative origin-top-left"
+      style={{
+        width: CANVAS_W,
+        height: currentH,
+        transform: `scale(${scale})`,
+      }}
     >
       {!treeHidden && (
       <svg
@@ -140,6 +169,20 @@ export default function FairTree() {
       <ScenarioTable x={TABLE.x} y={TABLE.y} width={TABLE.width} />
 
       <div
+        className="absolute text-base font-semibold text-ink whitespace-nowrap -translate-x-1/2"
+        style={{ top: MATERIALITY_LABEL_Y, left: TABLE.x + TABLE.width / 2 }}
+      >
+        Materiality Inputs
+      </div>
+
+      <div
+        className="absolute"
+        style={{ top: MATERIALITY_Y, left: TABLE.x, width: TABLE.width }}
+      >
+        <MaterialityInput />
+      </div>
+
+      <div
         className="absolute"
         style={{ top: TREE_LABEL_Y - 2, left: TABLE.x + 20 }}
       >
@@ -161,7 +204,7 @@ export default function FairTree() {
 
       {!treeHidden && (
         <>
-          <TreeNode title="Risk"                   kind="root"   {...POS.risk} width={220} height={60} rollup={fmtUsd(risk) + " / yr"} />
+          <TreeNode title="Risk"                   kind="root"   {...POS.risk} width={220} height={60} rollup={fmtUsd(risk) + " / yr"} key="risk-node" />
           <TreeNode title="Loss Event Frequency"   kind="branch" {...POS.lef}  rollup={fmtCount(lef) + " / yr"} />
           <TreeNode title="Loss Event Magnitude"   kind="branch" {...POS.lm}   rollup={fmtUsd(lm)} />
           <TreeNode title="Threat Event Frequency" kind="branch" {...POS.tef}  rollup={fmtCount(tef) + " / yr"} />
@@ -183,6 +226,7 @@ export default function FairTree() {
           </div>
         </>
       )}
+    </div>
     </div>
   );
 }
