@@ -82,6 +82,7 @@ type Store = {
   scenarioMeta: ScenarioMeta;
   tableFrozen: boolean;
   treeHidden: boolean;
+  referencesOpen: boolean;
   result: SimResult | null;
   running: boolean;
   setLeaf: (key: InputKey, value: Triangular) => void;
@@ -96,6 +97,7 @@ type Store = {
   setScenarioMeta: (key: ScenarioMetaKey, value: string) => void;
   setTableFrozen: (b: boolean) => void;
   setTreeHidden: (b: boolean) => void;
+  setReferencesOpen: (b: boolean) => void;
   setResult: (r: SimResult | null) => void;
   setRunning: (b: boolean) => void;
 };
@@ -122,6 +124,7 @@ export const useStore = create<Store>((set) => ({
   scenarioMeta: { scenarioNumber: "", asset: "", threatCommunity: "", threatType: "", effect: "" },
   tableFrozen: false,
   treeHidden: false,
+  referencesOpen: false,
   result: null,
   running: false,
   setLeaf: (key, value) =>
@@ -156,6 +159,7 @@ export const useStore = create<Store>((set) => ({
     set((s) => ({ scenarioMeta: { ...s.scenarioMeta, [key]: value } })),
   setTableFrozen: (b) => set(() => ({ tableFrozen: b })),
   setTreeHidden: (b) => set(() => ({ treeHidden: b })),
+  setReferencesOpen: (b) => set(() => ({ referencesOpen: b })),
   setResult: (r) => set(() => ({ result: r })),
   setRunning: (b) => set(() => ({ running: b })),
 }));

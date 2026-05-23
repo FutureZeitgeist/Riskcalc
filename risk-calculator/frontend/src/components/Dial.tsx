@@ -22,37 +22,6 @@ export default function Dial({ value, baseline, bound, step, unit, onChange, onR
 
   return (
     <div className="flex flex-col items-center gap-3 p-1">
-      <div
-        className="relative"
-        style={{ width: dialSize, height: dialSize }}
-        aria-label="dial visual"
-      >
-        <svg width={dialSize} height={dialSize} viewBox="0 0 100 100">
-          <circle cx="50" cy="50" r="44" fill="none" stroke="#e5e7eb" strokeWidth="6" />
-          <circle
-            cx="50"
-            cy="50"
-            r="44"
-            fill="none"
-            stroke="#9ca3af"
-            strokeWidth="6"
-            strokeDasharray={`${((value.likely - lo) / span) * 207} 999`}
-            strokeLinecap="round"
-            transform="rotate(-225 50 50)"
-          />
-          <line
-            x1="50"
-            y1="50"
-            x2={50 + 32 * Math.cos((angle * Math.PI) / 180)}
-            y2={50 + 32 * Math.sin((angle * Math.PI) / 180)}
-            stroke="#1d4ed8"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
-          <circle cx="50" cy="50" r="5" fill="#1d4ed8" />
-        </svg>
-      </div>
-
       <div className="grid grid-cols-3 gap-2 w-full text-[11px]">
         <NumField label="min"    value={value.min}    onChange={(v) => setKey("min",    v)} step={step} bound={bound} />
         <NumField label="likely" value={value.likely} onChange={(v) => setKey("likely", v)} step={step} bound={bound} highlight />

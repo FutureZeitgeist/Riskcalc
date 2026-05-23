@@ -4,6 +4,7 @@ import InputTable from "./components/InputTable";
 import Toggle from "./components/Toggle";
 import ScenarioSummary from "./components/ScenarioSummary";
 import ResultsView from "./components/ResultsView";
+import References from "./components/References";
 import { useStore } from "./lib/state";
 
 export default function App() {
@@ -97,9 +98,10 @@ export default function App() {
         </section>
       </main>
 
-      <footer className="border-t border-ink px-6 py-3 text-xs text-ink">
-        scaffold v0.1 · tree wired · dials live · simulation next
+      <footer className="border-t border-ink px-6 py-3 text-xs text-ink flex items-center justify-between gap-3">
+        <span>Open FAIR Risk Calculator · React frontend</span>
       </footer>
+      <References />
     </div>
   );
 }
