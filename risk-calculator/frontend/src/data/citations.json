@@ -63,5 +63,30 @@
     "id": "open-fair",
     "apa": "The Open Group. (2021). The Open FAIR Body of Knowledge. The Open Group. https://www.opengroup.org/forum/security/riskmanagement",
     "url": "https://www.opengroup.org/forum/security/riskmanagement"
+  },
+  "eschenbach-1992": {
+    "id": "eschenbach-1992",
+    "apa": "Eschenbach, T. G. (1992). Spiderplots versus tornado diagrams for sensitivity analysis. Interfaces, 22(6), 40-46. https://pubsonline.informs.org/doi/10.1287/inte.22.6.40",
+    "url": "https://pubsonline.informs.org/doi/10.1287/inte.22.6.40"
+  },
+  "borgonovo-plischke-2016": {
+    "id": "borgonovo-plischke-2016",
+    "apa": "Borgonovo, E., & Plischke, E. (2016). Sensitivity analysis: A review of recent advances. European Journal of Operational Research, 248(3), 869-887. https://www.sciencedirect.com/science/article/abs/pii/S0377221715005469",
+    "url": "https://www.sciencedirect.com/science/article/abs/pii/S0377221715005469"
+  },
+  "borgonovo-rabitti-2023": {
+    "id": "borgonovo-rabitti-2023",
+    "apa": "Borgonovo, E., & Rabitti, G. (2023). Screening: From tornado diagrams to effective dimensions. European Journal of Operational Research, 304(3), 1200-1211. https://ideas.repec.org/a/eee/ejores/v304y2023i3p1200-1211.html",
+    "url": "https://ideas.repec.org/a/eee/ejores/v304y2023i3p1200-1211.html"
+  },
+  "iman-helton-1988": {
+    "id": "iman-helton-1988",
+    "apa": "Iman, R. L., & Helton, J. C. (1988). An investigation of uncertainty and sensitivity analysis techniques for computer models. Risk Analysis, 8(1), 71-90. https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1539-6924.1988.tb01155.x",
+    "url": "https://onlinelibrary.wiley.com/doi/abs/10.1111/j.1539-6924.1988.tb01155.x"
+  },
+  "marino-2008": {
+    "id": "marino-2008",
+    "apa": "Marino, S., Hogue, I. B., Ray, C. J., & Kirschner, D. E. (2008). A methodology for performing global uncertainty and sensitivity analysis in systems biology. Journal of Theoretical Biology, 254(1), 178-196. https://pmc.ncbi.nlm.nih.gov/articles/PMC2570191/",
+    "url": "https://pmc.ncbi.nlm.nih.gov/articles/PMC2570191/"
   }
 }

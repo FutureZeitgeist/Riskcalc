@@ -3,6 +3,7 @@ import { SimResult, useStore } from "../lib/state";
 import SummaryStats from "./SummaryStats";
 import Histogram from "./Histogram";
 import ExceedanceCurve from "./ExceedanceCurve";
+import Tornado from "./Tornado";
 import { computedMateriality } from "./MaterialityInput";
 
 type Props = { result: SimResult };
@@ -10,7 +11,9 @@ type Props = { result: SimResult };
 export default function ResultsView({ result }: Props) {
   const [histHover, setHistHover] = useState<string | null>(null);
   const [exHover, setExHover] = useState<string | null>(null);
+  const [tornadoHover, setTornadoHover] = useState<string | null>(null);
   const materiality = useStore((s) => s.materiality);
+  const tornadoRows = useStore((s) => s.tornado);
   const matValue = computedMateriality(materiality);
 
   const totalCount = result.histogram.counts.reduce((a, b) => a + b, 0);
@@ -72,6 +75,23 @@ export default function ResultsView({ result }: Props) {
           />
         </div>
       </div>
+
+      {tornadoRows && tornadoRows.length > 0 && (
+        <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
+          <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col">
+            <h4 className="text-sm font-semibold text-ink mb-2">
+              Sensitivity insight
+            </h4>
+            <p className="text-sm text-ink flex-1">
+              {tornadoHover ??
+                "Hover over a bar to see which input drives risk most and by how much."}
+            </p>
+          </div>
+          <div className="rounded-xl border border-ink bg-canvas p-3">
+            <Tornado rows={tornadoRows} onHover={setTornadoHover} />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

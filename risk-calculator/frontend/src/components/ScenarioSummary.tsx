@@ -1,5 +1,5 @@
 import { InputKey, ScenarioMetaKey, useStore } from "../lib/state";
-import { simulate } from "../lib/api";
+import { simulate, tornado } from "../lib/api";
 import { computedMateriality, METRIC_OPTIONS } from "./MaterialityInput";
 
 const SCOPE_ROWS: { key: ScenarioMetaKey; label: string }[] = [
@@ -49,11 +49,17 @@ export default function ScenarioSummary() {
   const basisLabel =
     METRIC_OPTIONS.find((o) => o.value === materiality.metric)?.label ?? materiality.metric;
 
+  const setTornado = useStore((s) => s.setTornado);
+
   const runScenario = async (alsoPrint: boolean) => {
     setRunning(true);
     try {
-      const result = await simulate(inputs, iterations);
+      const [result, tornadoRows] = await Promise.all([
+        simulate(inputs, iterations),
+        tornado(inputs, iterations),
+      ]);
       setResult(result);
+      setTornado(tornadoRows);
       if (alsoPrint) {
         setTimeout(() => window.print(), 500);
       }

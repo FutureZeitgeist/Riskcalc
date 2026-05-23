@@ -2,12 +2,12 @@ import { InputKey, SimResult, Triangular } from "./state";
 
 const pert = (t: Triangular) => ({ type: "pert", min: t.min, likely: t.likely, max: t.max });
 
-export async function simulate(
+function buildPayload(
   inputs: Record<InputKey, Triangular>,
   iterations: number,
-  seed = 42
-): Promise<SimResult> {
-  const payload = {
+  seed: number
+) {
+  return {
     name: "Risk Scenario",
     iterations,
     seed,
@@ -19,10 +19,17 @@ export async function simulate(
     secondary_loss_frequency: pert(inputs.secondaryLossFrequency),
     secondary_loss_magnitude: pert(inputs.secondaryLossMagnitude),
   };
+}
+
+export async function simulate(
+  inputs: Record<InputKey, Triangular>,
+  iterations: number,
+  seed = 42
+): Promise<SimResult> {
   const r = await fetch("/api/simulate", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(buildPayload(inputs, iterations, seed)),
   });
   if (!r.ok) throw new Error(`simulate failed: ${r.status}`);
   const data = await r.json();
@@ -32,4 +39,21 @@ export async function simulate(
     exceedance: data.exceedance,
     iterations: data.iterations,
   };
+}
+
+export type TornadoRow = { input: string; rho: number };
+
+export async function tornado(
+  inputs: Record<InputKey, Triangular>,
+  iterations: number,
+  seed = 42
+): Promise<TornadoRow[]> {
+  const r = await fetch("/api/tornado", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(buildPayload(inputs, iterations, seed)),
+  });
+  if (!r.ok) throw new Error(`tornado failed: ${r.status}`);
+  const data = await r.json();
+  return data.rows as TornadoRow[];
 }

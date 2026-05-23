@@ -70,6 +70,8 @@ export type SimResult = {
   tornado?: { input: string; rho: number }[];
 };
 
+export type TornadoState = { input: string; rho: number }[];
+
 type Store = {
   inputs: Record<InputKey, Triangular>;
   baselines: Record<InputKey, Triangular>;
@@ -84,6 +86,7 @@ type Store = {
   treeHidden: boolean;
   referencesOpen: boolean;
   result: SimResult | null;
+  tornado: TornadoState | null;
   running: boolean;
   setLeaf: (key: InputKey, value: Triangular) => void;
   setLikelyProportional: (key: InputKey, newLikely: number) => void;
@@ -99,6 +102,7 @@ type Store = {
   setTreeHidden: (b: boolean) => void;
   setReferencesOpen: (b: boolean) => void;
   setResult: (r: SimResult | null) => void;
+  setTornado: (t: TornadoState | null) => void;
   setRunning: (b: boolean) => void;
 };
 
@@ -126,6 +130,7 @@ export const useStore = create<Store>((set) => ({
   treeHidden: false,
   referencesOpen: false,
   result: null,
+  tornado: null,
   running: false,
   setLeaf: (key, value) =>
     set((s) => ({ inputs: { ...s.inputs, [key]: value } })),
@@ -161,5 +166,6 @@ export const useStore = create<Store>((set) => ({
   setTreeHidden: (b) => set(() => ({ treeHidden: b })),
   setReferencesOpen: (b) => set(() => ({ referencesOpen: b })),
   setResult: (r) => set(() => ({ result: r })),
+  setTornado: (t) => set(() => ({ tornado: t })),
   setRunning: (b) => set(() => ({ running: b })),
 }));
