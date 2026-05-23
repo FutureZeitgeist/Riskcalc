@@ -14,25 +14,41 @@ type Props = {
   values: number[];
   probabilities: number[];
   materiality?: number | null;
+  onHover?: (text: string | null) => void;
 };
 
-export default function ExceedanceCurve({ values, probabilities, materiality }: Props) {
+export default function ExceedanceCurve({ values, probabilities, materiality, onHover }: Props) {
   const data = values.map((v, i) => ({ value: v, prob: probabilities[i] }));
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <LineChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
+    <ResponsiveContainer width="100%" height={280}>
+      <LineChart
+        data={data}
+        margin={{ top: 10, right: 10, bottom: 8, left: 8 }}
+        onMouseMove={(s: any) => {
+          if (s && s.activePayload && s.activePayload.length) {
+            const d = s.activePayload[0].payload;
+            onHover?.(
+              `There is a ${d.prob.toFixed(
+                1
+              )} percent chance that annual losses will exceed ${fmtUsd(d.value)}.`
+            );
+          }
+        }}
+        onMouseLeave={() => onHover?.(null)}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
           dataKey="value"
           tickFormatter={(v) => fmtUsdShort(v)}
-          tick={{ fontSize: 10, fill: "#000" }}
-          stroke="#9ca3af"
+          tick={{ fontSize: 13, fill: "#000" }}
+          stroke="#000"
+          minTickGap={60}
         />
         <YAxis
           tickFormatter={(v) => `${v.toFixed(0)}%`}
-          tick={{ fontSize: 10, fill: "#000" }}
-          stroke="#9ca3af"
+          tick={{ fontSize: 13, fill: "#000" }}
+          stroke="#000"
         />
         <Tooltip
           formatter={(v: number) => `${v.toFixed(1)}%`}

@@ -14,25 +14,44 @@ type Props = {
   counts: number[];
   bins: number[];
   materiality?: number | null;
+  onHover?: (text: string | null) => void;
 };
 
-export default function Histogram({ counts, bins, materiality }: Props) {
+export default function Histogram({ counts, bins, materiality, onHover }: Props) {
   const data = counts.map((c, i) => ({
     bin: (bins[i] + bins[i + 1]) / 2,
+    binLow: bins[i],
+    binHigh: bins[i + 1],
     count: c,
   }));
+  const total = counts.reduce((a, b) => a + b, 0);
 
   return (
-    <ResponsiveContainer width="100%" height={220}>
-      <BarChart data={data} margin={{ top: 8, right: 8, bottom: 4, left: 0 }}>
+    <ResponsiveContainer width="100%" height={280}>
+      <BarChart
+        data={data}
+        margin={{ top: 10, right: 10, bottom: 8, left: 8 }}
+        onMouseMove={(s: any) => {
+          if (s && s.activePayload && s.activePayload.length) {
+            const d = s.activePayload[0].payload;
+            const pct = total > 0 ? ((d.count / total) * 100).toFixed(1) : "0";
+            onHover?.(
+              `${pct} percent of simulated years produced an annual loss between ${fmtUsd(
+                d.binLow
+              )} and ${fmtUsd(d.binHigh)}.`
+            );
+          }
+        }}
+        onMouseLeave={() => onHover?.(null)}
+      >
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
           dataKey="bin"
           tickFormatter={(v) => fmtUsdShort(v)}
-          tick={{ fontSize: 10, fill: "#000" }}
-          stroke="#9ca3af"
+          tick={{ fontSize: 13, fill: "#000" }}
+          stroke="#000"
         />
-        <YAxis tick={{ fontSize: 10, fill: "#000" }} stroke="#9ca3af" />
+        <YAxis tick={{ fontSize: 13, fill: "#000" }} stroke="#000" />
         <Tooltip
           formatter={(v: number) => v.toLocaleString()}
           labelFormatter={(v: number) => `Loss: ${fmtUsd(v)}`}

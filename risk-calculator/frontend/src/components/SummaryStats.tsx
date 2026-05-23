@@ -14,25 +14,40 @@ export default function SummaryStats({ summary, iterations }: Props) {
     ["Conditional VaR (Expected Shortfall)", summary.cvar_95, "cvar"],
   ];
   return (
-    <div className="rounded-lg border border-line-grey bg-canvas">
-      <div className="px-3 py-2 border-b border-line-grey text-xs text-ink flex items-center justify-between">
-        <span>Annualized Loss Expectancy</span>
-        <span>iterations: {iterations.toLocaleString()}</span>
+    <div className="space-y-2">
+      <div className="text-sm font-bold text-ink px-1">
+        The simulation projects an average annual loss of{" "}
+        <span className="text-ink">{fmtUsd(summary.mean)}</span>, with a five
+        percent chance of exceeding{" "}
+        <span className="text-ink">{fmtUsd(summary.var_95)}</span>. The expected
+        loss in the worst five percent of years averages{" "}
+        <span className="text-ink">{fmtUsd(summary.cvar_95)}</span>. Results are
+        based on {iterations.toLocaleString()} Monte Carlo iterations.
       </div>
-      <table className="w-full text-sm">
+      <table className="w-full border-collapse border-2 border-ink table-fixed bg-canvas">
+        <thead>
+          <tr>
+            {rows.map(([label]) => (
+              <th
+                key={label}
+                className="border border-ink px-2 py-2 text-sm font-bold text-ink bg-panel-grey text-center leading-tight"
+              >
+                {label}
+              </th>
+            ))}
+          </tr>
+        </thead>
         <tbody>
-          {rows.map(([label, value, k]) => (
-            <tr key={label} className="border-b border-line-grey last:border-0">
-              <td className="px-3 py-1.5 text-ink">{label}</td>
+          <tr>
+            {rows.map(([label, value]) => (
               <td
-                className={
-                  "px-3 py-1.5 text-right font-mono font-bold text-ink"
-                }
+                key={label}
+                className="border border-ink px-2 py-2 text-sm font-bold text-ink text-center"
               >
                 {fmtUsd(value)}
               </td>
-            </tr>
-          ))}
+            ))}
+          </tr>
         </tbody>
       </table>
     </div>
