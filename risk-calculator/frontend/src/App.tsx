@@ -2,12 +2,17 @@ import { useEffect, useState } from "react";
 import FairTree from "./components/FairTree";
 import InputTable from "./components/InputTable";
 import Toggle from "./components/Toggle";
+import ScenarioSummary from "./components/ScenarioSummary";
+import Histogram from "./components/Histogram";
+import ExceedanceCurve from "./components/ExceedanceCurve";
+import SummaryStats from "./components/SummaryStats";
 import { useStore } from "./lib/state";
 
 export default function App() {
   const [backendOk, setBackendOk] = useState<boolean | null>(null);
   const tableFrozen = useStore((s) => s.tableFrozen);
   const setTableFrozen = useStore((s) => s.setTableFrozen);
+  const result = useStore((s) => s.result);
 
   useEffect(() => {
     fetch("/api/scenarios")
@@ -75,11 +80,44 @@ export default function App() {
           </div>
         </section>
 
+        <section className="border-b border-ink p-6 overflow-auto bg-canvas">
+          <h2 className="text-base font-semibold text-ink mb-4 text-center">
+            Scenario Summary
+          </h2>
+          <ScenarioSummary />
+        </section>
+
         <section className="p-6 bg-panel-grey/40">
           <h2 className="text-base font-semibold text-ink mb-4">Results</h2>
-          <div className="rounded-xl border border-ink bg-canvas h-[480px] flex items-center justify-center text-ink text-sm">
-            run a simulation to see distributions
-          </div>
+          {result ? (
+            <div className="space-y-4">
+              <SummaryStats summary={result.summary} iterations={result.iterations} />
+              <div className="grid lg:grid-cols-2 gap-4">
+                <div className="rounded-xl border border-ink bg-canvas p-3">
+                  <h3 className="text-sm font-semibold text-ink mb-2">
+                    Annualized Loss Expectancy distribution
+                  </h3>
+                  <Histogram
+                    counts={result.histogram.counts}
+                    bins={result.histogram.bins}
+                  />
+                </div>
+                <div className="rounded-xl border border-ink bg-canvas p-3">
+                  <h3 className="text-sm font-semibold text-ink mb-2">
+                    Loss exceedance curve
+                  </h3>
+                  <ExceedanceCurve
+                    values={result.exceedance.values}
+                    probabilities={result.exceedance.probabilities}
+                  />
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="rounded-xl border border-ink bg-canvas h-[300px] flex items-center justify-center text-ink text-sm">
+              Click Run Scenario to see the distribution and statistics
+            </div>
+          )}
         </section>
       </main>
 
