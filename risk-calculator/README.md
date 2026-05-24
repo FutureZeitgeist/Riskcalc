@@ -81,7 +81,7 @@ The Factor Analysis simulation samples each of the seven Open FAIR leaf inputs f
 
 The Decision Analysis simulation samples loss reduction, implementation cost, ongoing operating cost, and discount rate from three-point distributions. It draws a Bernoulli cancellation flag for each trial. For active trials, it builds year-by-year cashflows over the configured time horizon with ramp-up, efficacy decay, and a residual loss floor, then discounts to net present value. Cancelled trials forfeit benefits but recover salvage value.
 
-The Cost-versus-Reduction decision grid sweeps implementation cost against loss reduction across three deterministic scenarios — pessimistic, central, and optimistic combinations of the non-axis variables — to produce a tradeoff heatmap.
+The Cost-versus-Reduction decision grid sweeps implementation cost against loss reduction across three deterministic scenarios — pessimistic, central, and optimistic combinations of the non-axis variables — to produce a quantified tradeoff heatmap (not just a heatmap (iykyk)).
 
 ## HTTP endpoints
 
