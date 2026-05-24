@@ -72,6 +72,8 @@ export default function FairTree() {
   const inputs = useStore((s) => s.inputs);
   const treeHidden = useStore((s) => s.treeHidden);
   const setTreeHidden = useStore((s) => s.setTreeHidden);
+  const scenarioOneLiner = useStore((s) => s.scenarioOneLiner);
+  const setScenarioOneLiner = useStore((s) => s.setScenarioOneLiner);
 
   const tef = rollupTef(inputs.contactFrequency, inputs.probabilityOfAction);
   const vuln = vulnerabilityFromGrid(inputs.threatCapability, inputs.resistanceStrength);
@@ -160,10 +162,19 @@ export default function FairTree() {
       )}
 
       <div
-        className="absolute text-base font-semibold text-ink whitespace-nowrap -translate-x-1/2"
-        style={{ top: SCOPE_LABEL_Y, left: TABLE.x + TABLE.width / 2 }}
+        className="absolute flex items-baseline gap-3"
+        style={{ top: SCOPE_LABEL_Y, left: TABLE.x, width: TABLE.width }}
       >
-        Scope Table
+        <span className="text-base font-semibold text-ink whitespace-nowrap">
+          Scope Table:
+        </span>
+        <input
+          type="text"
+          value={scenarioOneLiner}
+          onChange={(e) => setScenarioOneLiner(e.target.value)}
+          placeholder="enter one-line scenario summary"
+          className="flex-1 text-sm font-semibold text-input-blue bg-canvas border-b border-ink/40 px-1 py-0.5 focus:outline-none focus:border-input-blue placeholder:text-ink/40 placeholder:font-normal placeholder:italic"
+        />
       </div>
 
       <ScenarioTable x={TABLE.x} y={TABLE.y} width={TABLE.width} />
@@ -172,7 +183,7 @@ export default function FairTree() {
         className="absolute text-base font-semibold text-ink whitespace-nowrap -translate-x-1/2"
         style={{ top: MATERIALITY_LABEL_Y, left: TABLE.x + TABLE.width / 2 }}
       >
-        Materiality Inputs
+        Materiality Inputs (per SEC requirements)
       </div>
 
       <div

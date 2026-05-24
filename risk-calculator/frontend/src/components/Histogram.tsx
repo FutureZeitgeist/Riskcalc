@@ -61,6 +61,7 @@ export default function Histogram({
           tickFormatter={(v) => fmtUsdShort(v)}
           tick={{ fontSize: 13, fill: "#000" }}
           stroke="#000"
+          minTickGap={48}
         />
         <YAxis tick={{ fontSize: 13, fill: "#000" }} stroke="#000" />
         <Tooltip

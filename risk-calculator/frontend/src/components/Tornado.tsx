@@ -26,11 +26,24 @@ type Props = {
   rows: TornadoRow[];
   onHover?: (text: string | null) => void;
   outcomeLabel?: string;
+  labelMap?: Record<string, string>;
+  yAxisWidth?: number;
+  showMethodology?: boolean;
+  height?: number;
 };
 
-export default function Tornado({ rows, onHover, outcomeLabel = "annualized loss" }: Props) {
+export default function Tornado({
+  rows,
+  onHover,
+  outcomeLabel = "annualized loss",
+  labelMap,
+  yAxisWidth = 110,
+  showMethodology = true,
+  height = 280,
+}: Props) {
   const data = rows.map((r) => ({
-    input: r.input,
+    input: labelMap?.[r.input] ?? r.input,
+    fullInput: r.input,
     rho: r.rho,
     absRho: Math.abs(r.rho),
     direction: r.rho >= 0 ? "positive" : "negative",
@@ -40,7 +53,10 @@ export default function Tornado({ rows, onHover, outcomeLabel = "annualized loss
     <div>
       <div className="flex items-center justify-between mb-2">
         <h3 className="text-sm font-semibold text-ink">
-          Tornado sensitivity{" "}
+          Tornado sensitivity
+          {showMethodology && (
+            <>
+              {" "}
           <Popover.Root>
             <Popover.Trigger asChild>
               <button
@@ -134,14 +150,16 @@ export default function Tornado({ rows, onHover, outcomeLabel = "annualized loss
               </Popover.Content>
             </Popover.Portal>
           </Popover.Root>
+            </>
+          )}
         </h3>
       </div>
 
-      <ResponsiveContainer width="100%" height={280}>
+      <ResponsiveContainer width="100%" height={height}>
         <BarChart
           data={data}
           layout="vertical"
-          margin={{ top: 10, right: 10, bottom: 10, left: 110 }}
+          margin={{ top: 10, right: 10, bottom: 10, left: 4 }}
           onMouseMove={(s: any) => {
             if (s && s.activePayload && s.activePayload.length) {
               const d = s.activePayload[0].payload;
@@ -165,9 +183,10 @@ export default function Tornado({ rows, onHover, outcomeLabel = "annualized loss
           <YAxis
             type="category"
             dataKey="input"
-            tick={{ fontSize: 12, fill: "#000" }}
+            tick={{ fontSize: 11, fill: "#000" }}
             stroke="#000"
-            width={110}
+            width={yAxisWidth}
+            interval={0}
           />
           <Tooltip
             formatter={(v: number) => v.toFixed(2)}

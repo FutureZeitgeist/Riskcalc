@@ -32,8 +32,8 @@ export default function ResultsView({ result }: Props) {
         probExceed={probExceed}
       />
 
-      <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
-        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col">
+      <div className="grid lg:grid-cols-[1fr_2fr] gap-4 print:grid-cols-1 print-keep-together">
+        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col print:hidden">
           <h4 className="text-sm font-semibold text-ink mb-2">
             Distribution insight
           </h4>
@@ -54,8 +54,8 @@ export default function ResultsView({ result }: Props) {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
-        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col">
+      <div className="grid lg:grid-cols-[1fr_2fr] gap-4 print:grid-cols-1 print-keep-together">
+        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col print:hidden">
           <h4 className="text-sm font-semibold text-ink mb-2">
             Exceedance insight
           </h4>
@@ -77,8 +77,8 @@ export default function ResultsView({ result }: Props) {
       </div>
 
       {tornadoRows && tornadoRows.length > 0 && (
-        <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
-          <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col">
+        <div className="grid lg:grid-cols-[1fr_2fr] gap-4 print:grid-cols-1 print-keep-together">
+          <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col print:hidden">
             <h4 className="text-sm font-semibold text-ink mb-2">
               Sensitivity insight
             </h4>

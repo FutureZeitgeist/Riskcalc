@@ -142,6 +142,7 @@ type Store = {
   csfTiers: Record<string, number>;
   csfTiersEnabled: boolean;
   scenarioMeta: ScenarioMeta;
+  scenarioOneLiner: string;
   tableFrozen: boolean;
   treeHidden: boolean;
   referencesOpen: boolean;
@@ -181,6 +182,7 @@ type Store = {
   setCsfTiersEnabled: (b: boolean) => void;
   setIterations: (n: number) => void;
   setScenarioMeta: (key: ScenarioMetaKey, value: string) => void;
+  setScenarioOneLiner: (s: string) => void;
   setTableFrozen: (b: boolean) => void;
   setTreeHidden: (b: boolean) => void;
   setReferencesOpen: (b: boolean) => void;
@@ -209,6 +211,7 @@ export const useStore = create<Store>((set) => ({
   csfTiers: { identify: 2, protect: 2, detect: 2, respond: 2, recover: 2 },
   csfTiersEnabled: false,
   scenarioMeta: { scenarioNumber: "", asset: "", threatCommunity: "", threatType: "", effect: "" },
+  scenarioOneLiner: "",
   tableFrozen: false,
   treeHidden: false,
   referencesOpen: false,
@@ -258,6 +261,7 @@ export const useStore = create<Store>((set) => ({
   setIterations: (n) => set(() => ({ iterations: n })),
   setScenarioMeta: (key, value) =>
     set((s) => ({ scenarioMeta: { ...s.scenarioMeta, [key]: value } })),
+  setScenarioOneLiner: (s) => set(() => ({ scenarioOneLiner: s })),
   setTableFrozen: (b) => set(() => ({ tableFrozen: b })),
   setTreeHidden: (b) => set(() => ({ treeHidden: b })),
   setReferencesOpen: (b) => set(() => ({ referencesOpen: b })),

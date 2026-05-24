@@ -2,13 +2,11 @@ import { useState } from "react";
 import { DecisionGridResult, DecisionGridScenario } from "../lib/state";
 import { fmtUsd, fmtUsdShort } from "../lib/compute";
 
-const PANEL_W = 340;
-const PANEL_H = 300;
-const M = { top: 28, right: 12, bottom: 56, left: 56 };
-const PLOT_W = PANEL_W - M.left - M.right;
-const PLOT_H = PANEL_H - M.top - M.bottom;
+const DEFAULT_PANEL_W = 340;
+const DEFAULT_PANEL_H = 300;
+const MARGINS = { top: 28, right: 12, bottom: 56, left: 56 };
 
-function npvColor(npv: number, absMax: number): string {
+export function npvColor(npv: number, absMax: number): string {
   if (absMax === 0) return "#ffffff";
   const t = Math.max(-1, Math.min(1, npv / absMax));
   if (t < 0) {
@@ -28,7 +26,7 @@ type HoverState =
   | { scenario: string; cost: number; reduction: number; npv: number }
   | null;
 
-function Heatmap({
+export function Heatmap({
   title,
   scenarioKey,
   scenario,
@@ -37,6 +35,8 @@ function Heatmap({
   marker,
   absMax,
   onHover,
+  panelW = DEFAULT_PANEL_W,
+  panelH = DEFAULT_PANEL_H,
 }: {
   title: string;
   scenarioKey: string;
@@ -45,8 +45,15 @@ function Heatmap({
   reductionAxis: number[];
   marker: { cost: number; reduction: number };
   absMax: number;
-  onHover: (h: HoverState) => void;
+  onHover?: (h: HoverState) => void;
+  panelW?: number;
+  panelH?: number;
 }) {
+  const M = MARGINS;
+  const PANEL_W = panelW;
+  const PANEL_H = panelH;
+  const PLOT_W = PANEL_W - M.left - M.right;
+  const PLOT_H = PANEL_H - M.top - M.bottom;
   const nCost = costAxis.length;
   const nRed = reductionAxis.length;
   const cellW = PLOT_W / nCost;
@@ -91,14 +98,14 @@ function Heatmap({
             stroke="#ffffff"
             strokeWidth={0.5}
             onMouseEnter={() =>
-              onHover({
+              onHover?.({
                 scenario: scenarioKey,
                 cost: costAxis[ci],
                 reduction: reductionAxis[ri],
                 npv,
               })
             }
-            onMouseLeave={() => onHover(null)}
+            onMouseLeave={() => onHover?.(null)}
           />
         ))
       )}
@@ -158,7 +165,7 @@ function Heatmap({
   );
 }
 
-function ColorLegend({ absMax }: { absMax: number }) {
+export function ColorLegend({ absMax }: { absMax: number }) {
   const W = 320;
   const H = 36;
   const BAR_H = 12;

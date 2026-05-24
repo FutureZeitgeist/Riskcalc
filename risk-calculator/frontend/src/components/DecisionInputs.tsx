@@ -1,5 +1,4 @@
 import { Triangular, useStore } from "../lib/state";
-import { decision, decisionGrid } from "../lib/api";
 
 type TriKey = "lossReduction" | "implementationCost" | "ongoingCost" | "discountRate";
 type ScalarKey =
@@ -146,35 +145,12 @@ function ScalarRow({
 }
 
 export default function DecisionInputs() {
-  const inputs = useStore((s) => s.inputs);
-  const iterations = useStore((s) => s.iterations);
   const di = useStore((s) => s.decisionInputs);
   const setTri = useStore((s) => s.setDecisionTriangular);
   const setScalar = useStore((s) => s.setDecisionScalar);
-  const setResult = useStore((s) => s.setDecisionResult);
-  const setGrid = useStore((s) => s.setDecisionGrid);
-  const running = useStore((s) => s.decisionRunning);
-  const setRunning = useStore((s) => s.setDecisionRunning);
 
   const triValue = (key: TriKey): Triangular => di[key];
   const scalarValue = (key: ScalarKey): number => di[key] as number;
-
-  const run = async () => {
-    setRunning(true);
-    try {
-      const [result, grid] = await Promise.all([
-        decision(inputs, di, iterations),
-        decisionGrid(inputs, di, iterations),
-      ]);
-      setResult(result);
-      setGrid(grid);
-    } catch (err) {
-      console.error("decision failed", err);
-      alert("Decision analysis failed; check the backend connection.");
-    } finally {
-      setRunning(false);
-    }
-  };
 
   const th =
     "border border-ink px-3 py-2 text-sm font-semibold text-ink bg-panel-grey leading-tight";
@@ -239,15 +215,6 @@ export default function DecisionInputs() {
         </table>
       </div>
 
-      <div className="pt-2 flex gap-3 justify-center no-print">
-        <button
-          onClick={run}
-          disabled={running}
-          className="px-4 py-2 bg-button-grey border border-ink rounded text-ink font-semibold hover:brightness-95 disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          {running ? "Running..." : "Run Decision Analysis"}
-        </button>
-      </div>
     </div>
   );
 }

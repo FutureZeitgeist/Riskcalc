@@ -26,8 +26,8 @@ export default function DecisionResults({ result }: Props) {
   ];
 
   return (
-    <div className="space-y-4">
-      <div className="text-sm font-bold text-ink px-1">
+    <div className="flex flex-col gap-4">
+      <div className="text-sm font-bold text-ink px-1 print:order-1">
         Over {result.horizonYears} years, the proposed control produces an
         average net present value of{" "}
         <span className="text-ink">{fmtUsd(s.mean)}</span>, with a{" "}
@@ -42,7 +42,7 @@ export default function DecisionResults({ result }: Props) {
         Carlo iterations.
       </div>
 
-      <table className="w-full border-collapse border-2 border-ink table-fixed bg-canvas">
+      <table className="w-full border-collapse border-2 border-ink table-fixed bg-canvas print:order-2">
         <thead>
           <tr>
             {rows.map(([label]) => (
@@ -69,8 +69,8 @@ export default function DecisionResults({ result }: Props) {
         </tbody>
       </table>
 
-      <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
-        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col">
+      <div className="grid lg:grid-cols-[1fr_2fr] gap-4 print:grid-cols-1 print-keep-together print:order-4">
+        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col print:hidden">
           <h4 className="text-sm font-semibold text-ink mb-2">
             Distribution insight
           </h4>
@@ -95,8 +95,8 @@ export default function DecisionResults({ result }: Props) {
         </div>
       </div>
 
-      <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
-        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col">
+      <div className="grid lg:grid-cols-[1fr_2fr] gap-4 print:grid-cols-1 print-keep-together print:order-5">
+        <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col print:hidden">
           <h4 className="text-sm font-semibold text-ink mb-2">
             Exceedance insight
           </h4>
@@ -125,8 +125,8 @@ export default function DecisionResults({ result }: Props) {
       </div>
 
       {result.tornado && result.tornado.length > 0 && (
-        <div className="grid lg:grid-cols-[1fr_2fr] gap-4">
-          <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col">
+        <div className="grid lg:grid-cols-[1fr_2fr] gap-4 print:grid-cols-1 print-keep-together print:order-6">
+          <div className="rounded-xl border border-ink bg-canvas p-3 flex flex-col print:hidden">
             <h4 className="text-sm font-semibold text-ink mb-2">
               Sensitivity insight
             </h4>
@@ -146,7 +146,7 @@ export default function DecisionResults({ result }: Props) {
       )}
 
       {grid && (
-        <div className="rounded-xl border border-ink bg-canvas p-3">
+        <div className="rounded-xl border border-ink bg-canvas p-3 print:order-3 print-keep-together">
           <h3 className="text-sm font-semibold text-ink mb-3">
             Cost versus Reduction decision grid
           </h3>
