@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { DecisionResult } from "../lib/state";
+import { DecisionResult, useStore } from "../lib/state";
 import { fmtUsd } from "../lib/compute";
 import Histogram from "./Histogram";
 import ExceedanceCurve from "./ExceedanceCurve";
 import Tornado from "./Tornado";
+import DecisionGrid from "./DecisionGrid";
 
 type Props = { result: DecisionResult };
 
@@ -11,6 +12,7 @@ export default function DecisionResults({ result }: Props) {
   const [histHover, setHistHover] = useState<string | null>(null);
   const [exHover, setExHover] = useState<string | null>(null);
   const [tornadoHover, setTornadoHover] = useState<string | null>(null);
+  const grid = useStore((s) => s.decisionGrid);
 
   const s = result.summary;
   const rows: [string, number][] = [
@@ -140,6 +142,15 @@ export default function DecisionResults({ result }: Props) {
               outcomeLabel="net present value"
             />
           </div>
+        </div>
+      )}
+
+      {grid && (
+        <div className="rounded-xl border border-ink bg-canvas p-3">
+          <h3 className="text-sm font-semibold text-ink mb-3">
+            Cost versus Reduction decision grid
+          </h3>
+          <DecisionGrid grid={grid} />
         </div>
       )}
     </div>

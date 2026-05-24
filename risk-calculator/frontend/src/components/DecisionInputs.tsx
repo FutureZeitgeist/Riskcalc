@@ -1,5 +1,5 @@
-import { DecisionInputs as DecisionInputsType, Triangular, useStore } from "../lib/state";
-import { decision } from "../lib/api";
+import { Triangular, useStore } from "../lib/state";
+import { decision, decisionGrid } from "../lib/api";
 
 type TriKey = "lossReduction" | "implementationCost" | "ongoingCost" | "discountRate";
 type ScalarKey =
@@ -152,6 +152,7 @@ export default function DecisionInputs() {
   const setTri = useStore((s) => s.setDecisionTriangular);
   const setScalar = useStore((s) => s.setDecisionScalar);
   const setResult = useStore((s) => s.setDecisionResult);
+  const setGrid = useStore((s) => s.setDecisionGrid);
   const running = useStore((s) => s.decisionRunning);
   const setRunning = useStore((s) => s.setDecisionRunning);
 
@@ -161,8 +162,12 @@ export default function DecisionInputs() {
   const run = async () => {
     setRunning(true);
     try {
-      const result = await decision(inputs, di, iterations);
+      const [result, grid] = await Promise.all([
+        decision(inputs, di, iterations),
+        decisionGrid(inputs, di, iterations),
+      ]);
       setResult(result);
+      setGrid(grid);
     } catch (err) {
       console.error("decision failed", err);
       alert("Decision analysis failed; check the backend connection.");

@@ -99,6 +99,24 @@ export type DecisionResult = {
   iterations: number;
 };
 
+export type DecisionGridScenario = {
+  baselineAle: number;
+  ongoingCost: number;
+  discountRate: number;
+  grid: number[][];
+};
+
+export type DecisionGridResult = {
+  costAxis: number[];
+  reductionAxis: number[];
+  pessimistic: DecisionGridScenario;
+  likely: DecisionGridScenario;
+  optimistic: DecisionGridScenario;
+  marker: { cost: number; reduction: number };
+  horizonYears: number;
+  iterations: number;
+};
+
 export type ActiveTab = "factor-analysis" | "decision-analysis";
 
 const DECISION_DEFAULTS: DecisionInputs = {
@@ -133,6 +151,7 @@ type Store = {
   activeTab: ActiveTab;
   decisionInputs: DecisionInputs;
   decisionResult: DecisionResult | null;
+  decisionGrid: DecisionGridResult | null;
   decisionRunning: boolean;
   setActiveTab: (t: ActiveTab) => void;
   setDecisionTriangular: (
@@ -150,6 +169,7 @@ type Store = {
     value: number
   ) => void;
   setDecisionResult: (r: DecisionResult | null) => void;
+  setDecisionGrid: (g: DecisionGridResult | null) => void;
   setDecisionRunning: (b: boolean) => void;
   setLeaf: (key: InputKey, value: Triangular) => void;
   setLikelyProportional: (key: InputKey, newLikely: number) => void;
@@ -198,6 +218,7 @@ export const useStore = create<Store>((set) => ({
   activeTab: "factor-analysis",
   decisionInputs: { ...DECISION_DEFAULTS },
   decisionResult: null,
+  decisionGrid: null,
   decisionRunning: false,
   setActiveTab: (t) => set(() => ({ activeTab: t })),
   setDecisionTriangular: (key, value) =>
@@ -205,6 +226,7 @@ export const useStore = create<Store>((set) => ({
   setDecisionScalar: (key, value) =>
     set((s) => ({ decisionInputs: { ...s.decisionInputs, [key]: value } })),
   setDecisionResult: (r) => set(() => ({ decisionResult: r })),
+  setDecisionGrid: (g) => set(() => ({ decisionGrid: g })),
   setDecisionRunning: (b) => set(() => ({ decisionRunning: b })),
   setLeaf: (key, value) =>
     set((s) => ({ inputs: { ...s.inputs, [key]: value } })),

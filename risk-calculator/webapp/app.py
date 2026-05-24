@@ -529,6 +529,142 @@ def decision():
         return jsonify({"success": False, "error": str(e)}), 400
 
 
+@app.route("/api/decision-grid", methods=["POST"])
+def decision_grid():
+    """
+    Compute three deterministic decision heatmaps over a cost x reduction
+    grid for pessimistic / likely / optimistic scenarios of the other
+    parameters.
+
+    For each scenario, each cell of the grid is the expected net present
+    value of a control with the given implementation cost and loss
+    reduction, computed deterministically as:
+
+        expected_npv = (1 - p_cancel) * active_npv + p_cancel * cancelled_npv
+
+      where active_npv assumes the control runs successfully for the
+      horizon and cancelled_npv pays the implementation cost in year 0
+      and recovers the salvage value in year 1.
+
+    Scenario knobs:
+      Pessimistic:  baseline Annualized Loss Expectancy at 10th percentile,
+                    ongoing cost at its PERT maximum, discount rate at its
+                    PERT maximum.
+      Likely:       baseline at 50th percentile, ongoing cost and discount
+                    rate at their PERT most-likely values.
+      Optimistic:   baseline at 90th percentile, ongoing cost at its PERT
+                    minimum, discount rate at its PERT minimum.
+
+    All other control parameters (cancellation probability, horizon,
+    ramp-up, efficacy decay, salvage, residual loss floor) are held
+    constant across scenarios.
+
+    The cost and reduction axes auto-fit to the PERT bounds of the
+    corresponding control inputs.
+    """
+    try:
+        data = request.json
+        baseline = data["baseline"]
+        control = data["control"]
+        iterations = int(data.get("iterations", 10000))
+        seed = int(data.get("seed", 42))
+        grid_size = int(data.get("grid_size", 12))
+        rng = np.random.default_rng(seed)
+
+        def sample(d):
+            return parse_distribution(d).sample(iterations, rng)
+
+        cf   = np.maximum(sample(baseline["contact_frequency"]), 0)
+        poa  = np.clip(sample(baseline["probability_of_action"]),    0, 1)
+        tc   = np.clip(sample(baseline["threat_capability"]),        0, 1)
+        rs   = np.clip(sample(baseline["resistance_strength"]),      0, 1)
+        pl   = np.maximum(sample(baseline["primary_loss"]),          0)
+        slef = np.clip(sample(baseline["secondary_loss_frequency"]), 0, 1)
+        slm  = np.maximum(sample(baseline["secondary_loss_magnitude"]), 0)
+        tef = cf * poa
+        vuln = np.maximum(tc - rs, 0.0)
+        ale_baseline = (tef * vuln) * (pl + slef * slm)
+
+        ale_p10 = float(np.percentile(ale_baseline, 10))
+        ale_p50 = float(np.percentile(ale_baseline, 50))
+        ale_p90 = float(np.percentile(ale_baseline, 90))
+
+        ongoing_d = control["ongoing_cost"]
+        discount_d = control["discount_rate"]
+        cost_d = control["implementation_cost"]
+        red_d = control["loss_reduction"]
+
+        horizon = int(control.get("horizon_years", 5))
+        ramp_up = int(control.get("ramp_up_year", 1))
+        decay = float(control.get("efficacy_decay", 0.05))
+        salvage = float(control.get("salvage_value", 0.0))
+        residual_floor = float(control.get("residual_loss_floor", 0.0))
+        p_cancel = float(control.get("cancellation_probability", 0.10))
+
+        cost_axis = np.linspace(float(cost_d["min"]), float(cost_d["max"]), grid_size)
+        red_axis  = np.linspace(float(red_d["min"]),  float(red_d["max"]),  grid_size)
+
+        t = np.arange(horizon)
+        decay_factor = (1.0 - decay) ** np.maximum(0, t - ramp_up)
+        benefit_mask = (t >= ramp_up).astype(float)
+        decay_yearly = decay_factor * benefit_mask
+
+        def compute(ale, ongoing, discount):
+            discount_factors = 1.0 / (1.0 + discount) ** t
+            effective_r = red_axis[:, None] * decay_yearly[None, :]
+            post_ale = np.maximum(residual_floor, ale * (1.0 - effective_r))
+            benefit_per_year = ale - post_ale
+            cashflow = benefit_per_year - ongoing
+            npv_no_cost = np.sum(cashflow * discount_factors[None, :], axis=1)
+            npv_active = npv_no_cost[:, None] - cost_axis[None, :]
+            if horizon > 1:
+                npv_cancelled_per_cost = -cost_axis + salvage * discount_factors[1]
+            else:
+                npv_cancelled_per_cost = -cost_axis
+            npv_cancelled = np.tile(npv_cancelled_per_cost, (grid_size, 1))
+            return (1 - p_cancel) * npv_active + p_cancel * npv_cancelled
+
+        grid_pess = compute(ale_p10, float(ongoing_d["max"]),    float(discount_d["max"]))
+        grid_lkly = compute(ale_p50, float(ongoing_d["likely"]), float(discount_d["likely"]))
+        grid_opti = compute(ale_p90, float(ongoing_d["min"]),    float(discount_d["min"]))
+
+        return jsonify({
+            "success": True,
+            "cost_axis":      cost_axis.tolist(),
+            "reduction_axis": red_axis.tolist(),
+            "pessimistic": {
+                "baseline_ale":  ale_p10,
+                "ongoing_cost":  float(ongoing_d["max"]),
+                "discount_rate": float(discount_d["max"]),
+                "grid":          grid_pess.tolist(),
+            },
+            "likely": {
+                "baseline_ale":  ale_p50,
+                "ongoing_cost":  float(ongoing_d["likely"]),
+                "discount_rate": float(discount_d["likely"]),
+                "grid":          grid_lkly.tolist(),
+            },
+            "optimistic": {
+                "baseline_ale":  ale_p90,
+                "ongoing_cost":  float(ongoing_d["min"]),
+                "discount_rate": float(discount_d["min"]),
+                "grid":          grid_opti.tolist(),
+            },
+            "marker": {
+                "cost":      float(cost_d["likely"]),
+                "reduction": float(red_d["likely"]),
+            },
+            "horizon_years": horizon,
+            "iterations":    iterations,
+            "seed":          seed,
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
 @app.route("/api/simulate-sle", methods=["POST"])
 def simulate_sle():
     """Run a Single Loss Event simulation (Loss Magnitude only, no LEF)."""
