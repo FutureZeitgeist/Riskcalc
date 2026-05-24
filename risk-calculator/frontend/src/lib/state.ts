@@ -72,6 +72,48 @@ export type SimResult = {
 
 export type TornadoState = { input: string; rho: number }[];
 
+export type DecisionInputs = {
+  lossReduction: Triangular;
+  implementationCost: Triangular;
+  ongoingCost: Triangular;
+  discountRate: Triangular;
+  cancellationProbability: number;
+  horizonYears: number;
+  rampUpYear: number;
+  efficacyDecay: number;
+  salvageValue: number;
+  residualLossFloor: number;
+};
+
+export type DecisionResult = {
+  summary: SimResult["summary"];
+  probPositive: number;
+  probCancelled: number;
+  expectedBaselineAle: number;
+  expectedAnnualSavings: number;
+  histogram: { counts: number[]; bins: number[] };
+  exceedance: { values: number[]; probabilities: number[] };
+  tornado: { input: string; rho: number }[];
+  horizonYears: number;
+  rampUpYear: number;
+  iterations: number;
+};
+
+export type ActiveTab = "factor-analysis" | "decision-analysis";
+
+const DECISION_DEFAULTS: DecisionInputs = {
+  lossReduction:      { min: 0.50,    likely: 0.80,    max: 0.95 },
+  implementationCost: { min: 500_000, likely: 1_000_000, max: 2_000_000 },
+  ongoingCost:        { min: 50_000,  likely: 150_000, max: 300_000 },
+  discountRate:       { min: 0.05,    likely: 0.08,    max: 0.12 },
+  cancellationProbability: 0.10,
+  horizonYears: 5,
+  rampUpYear: 1,
+  efficacyDecay: 0.05,
+  salvageValue: 0,
+  residualLossFloor: 0,
+};
+
 type Store = {
   inputs: Record<InputKey, Triangular>;
   baselines: Record<InputKey, Triangular>;
@@ -88,6 +130,27 @@ type Store = {
   result: SimResult | null;
   tornado: TornadoState | null;
   running: boolean;
+  activeTab: ActiveTab;
+  decisionInputs: DecisionInputs;
+  decisionResult: DecisionResult | null;
+  decisionRunning: boolean;
+  setActiveTab: (t: ActiveTab) => void;
+  setDecisionTriangular: (
+    key: "lossReduction" | "implementationCost" | "ongoingCost" | "discountRate",
+    value: Triangular
+  ) => void;
+  setDecisionScalar: (
+    key:
+      | "cancellationProbability"
+      | "horizonYears"
+      | "rampUpYear"
+      | "efficacyDecay"
+      | "salvageValue"
+      | "residualLossFloor",
+    value: number
+  ) => void;
+  setDecisionResult: (r: DecisionResult | null) => void;
+  setDecisionRunning: (b: boolean) => void;
   setLeaf: (key: InputKey, value: Triangular) => void;
   setLikelyProportional: (key: InputKey, newLikely: number) => void;
   setSector: (s: string, defaults: Record<InputKey, Triangular>) => void;
@@ -132,6 +195,17 @@ export const useStore = create<Store>((set) => ({
   result: null,
   tornado: null,
   running: false,
+  activeTab: "factor-analysis",
+  decisionInputs: { ...DECISION_DEFAULTS },
+  decisionResult: null,
+  decisionRunning: false,
+  setActiveTab: (t) => set(() => ({ activeTab: t })),
+  setDecisionTriangular: (key, value) =>
+    set((s) => ({ decisionInputs: { ...s.decisionInputs, [key]: value } })),
+  setDecisionScalar: (key, value) =>
+    set((s) => ({ decisionInputs: { ...s.decisionInputs, [key]: value } })),
+  setDecisionResult: (r) => set(() => ({ decisionResult: r })),
+  setDecisionRunning: (b) => set(() => ({ decisionRunning: b })),
   setLeaf: (key, value) =>
     set((s) => ({ inputs: { ...s.inputs, [key]: value } })),
   setLikelyProportional: (key, newLikely) =>

@@ -15,9 +15,18 @@ type Props = {
   probabilities: number[];
   materiality?: number | null;
   onHover?: (text: string | null) => void;
+  hoverTemplate?: (probPct: number, value: number) => string;
+  tooltipLabel?: (v: number) => string;
 };
 
-export default function ExceedanceCurve({ values, probabilities, materiality, onHover }: Props) {
+export default function ExceedanceCurve({
+  values,
+  probabilities,
+  materiality,
+  onHover,
+  hoverTemplate,
+  tooltipLabel,
+}: Props) {
   const data = values.map((v, i) => ({ value: v, prob: probabilities[i] }));
 
   return (
@@ -29,9 +38,11 @@ export default function ExceedanceCurve({ values, probabilities, materiality, on
           if (s && s.activePayload && s.activePayload.length) {
             const d = s.activePayload[0].payload;
             onHover?.(
-              `There is a ${d.prob.toFixed(
-                1
-              )} percent chance that annual losses will exceed ${fmtUsd(d.value)}.`
+              hoverTemplate
+                ? hoverTemplate(d.prob, d.value)
+                : `There is a ${d.prob.toFixed(
+                    1
+                  )} percent chance that annual losses will exceed ${fmtUsd(d.value)}.`
             );
           }
         }}
@@ -52,7 +63,9 @@ export default function ExceedanceCurve({ values, probabilities, materiality, on
         />
         <Tooltip
           formatter={(v: number) => `${v.toFixed(1)}%`}
-          labelFormatter={(v: number) => `Loss ≥ ${fmtUsd(v)}`}
+          labelFormatter={(v: number) =>
+            tooltipLabel ? tooltipLabel(v) : `Loss ≥ ${fmtUsd(v)}`
+          }
           contentStyle={{ fontSize: 11 }}
         />
         <Line

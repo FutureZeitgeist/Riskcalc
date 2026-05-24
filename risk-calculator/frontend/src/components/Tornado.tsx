@@ -22,9 +22,13 @@ const CONTEXT_IDS = [
   "borgonovo-rabitti-2023",
 ];
 
-type Props = { rows: TornadoRow[]; onHover?: (text: string | null) => void };
+type Props = {
+  rows: TornadoRow[];
+  onHover?: (text: string | null) => void;
+  outcomeLabel?: string;
+};
 
-export default function Tornado({ rows, onHover }: Props) {
+export default function Tornado({ rows, onHover, outcomeLabel = "annualized loss" }: Props) {
   const data = rows.map((r) => ({
     input: r.input,
     rho: r.rho,
@@ -143,7 +147,7 @@ export default function Tornado({ rows, onHover }: Props) {
               const d = s.activePayload[0].payload;
               const direction = d.direction === "positive" ? "increases" : "decreases";
               onHover?.(
-                `When ${d.input} goes up, the annualized loss ${direction}. Strength of relationship: ${d.absRho.toFixed(
+                `When ${d.input} goes up, the ${outcomeLabel} ${direction}. Strength of relationship: ${d.absRho.toFixed(
                   2
                 )} (rank correlation, where 1 is strongest).`
               );

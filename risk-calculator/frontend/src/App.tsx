@@ -5,6 +5,8 @@ import Toggle from "./components/Toggle";
 import ScenarioSummary from "./components/ScenarioSummary";
 import ResultsView from "./components/ResultsView";
 import References from "./components/References";
+import DecisionInputs from "./components/DecisionInputs";
+import DecisionResults from "./components/DecisionResults";
 import { useStore } from "./lib/state";
 
 export default function App() {
@@ -12,12 +14,21 @@ export default function App() {
   const tableFrozen = useStore((s) => s.tableFrozen);
   const setTableFrozen = useStore((s) => s.setTableFrozen);
   const result = useStore((s) => s.result);
+  const activeTab = useStore((s) => s.activeTab);
+  const setActiveTab = useStore((s) => s.setActiveTab);
+  const decisionResult = useStore((s) => s.decisionResult);
 
   useEffect(() => {
     fetch("/api/scenarios")
       .then((r) => setBackendOk(r.ok))
       .catch(() => setBackendOk(false));
   }, []);
+
+  const tabBtn = (isActive: boolean) =>
+    "px-4 py-2 text-sm font-semibold border-x border-t border-ink rounded-t-md -mb-px " +
+    (isActive
+      ? "bg-canvas text-ink"
+      : "bg-button-grey text-ink/60 hover:text-ink hover:brightness-95");
 
   return (
     <div className="min-h-screen flex flex-col bg-canvas">
@@ -53,49 +64,93 @@ export default function App() {
         </div>
       </header>
 
+      <nav className="no-print border-b border-ink px-6 pt-3 bg-panel-grey/40 flex gap-1">
+        <button
+          className={tabBtn(activeTab === "factor-analysis")}
+          onClick={() => setActiveTab("factor-analysis")}
+        >
+          Factor Analysis
+        </button>
+        <button
+          className={tabBtn(activeTab === "decision-analysis")}
+          onClick={() => setActiveTab("decision-analysis")}
+        >
+          Decision Analysis
+        </button>
+      </nav>
+
       <main className="flex-1 flex flex-col">
-        <section className="border-b border-ink p-6 overflow-auto bg-canvas">
-          <div className="rounded-xl border border-ink bg-canvas p-4 overflow-auto">
-            <FairTree />
-          </div>
-        </section>
+        {activeTab === "factor-analysis" && (
+          <>
+            <section className="border-b border-ink p-6 overflow-auto bg-canvas">
+              <div className="rounded-xl border border-ink bg-canvas p-4 overflow-auto">
+                <FairTree />
+              </div>
+            </section>
 
-        <section className="border-b border-ink p-6 overflow-auto bg-canvas">
-          <div className="relative">
-            <h2 className="text-base font-semibold text-ink mb-4 text-center">
-              Input Table
-            </h2>
-            <div
-              className="absolute top-0 -translate-x-1/2 z-10"
-              style={{ left: 64 }}
-            >
-              <Toggle
-                label="Freeze table"
-                on={tableFrozen}
-                onChange={(v) => setTableFrozen(v)}
-              />
-            </div>
-            <InputTable />
-          </div>
-        </section>
+            <section className="border-b border-ink p-6 overflow-auto bg-canvas">
+              <div className="relative">
+                <h2 className="text-base font-semibold text-ink mb-4 text-center">
+                  Input Table
+                </h2>
+                <div
+                  className="absolute top-0 -translate-x-1/2 z-10"
+                  style={{ left: 64 }}
+                >
+                  <Toggle
+                    label="Freeze table"
+                    on={tableFrozen}
+                    onChange={(v) => setTableFrozen(v)}
+                  />
+                </div>
+                <InputTable />
+              </div>
+            </section>
 
-        <section className="border-b border-ink p-6 overflow-auto bg-canvas">
-          <h2 className="text-base font-semibold text-ink mb-4 text-center">
-            Scenario Summary
-          </h2>
-          <ScenarioSummary />
-        </section>
+            <section className="border-b border-ink p-6 overflow-auto bg-canvas">
+              <h2 className="text-base font-semibold text-ink mb-4 text-center">
+                Scenario Summary
+              </h2>
+              <ScenarioSummary />
+            </section>
 
-        <section className="p-6 bg-panel-grey/40">
-          <h2 className="text-base font-semibold text-ink mb-4">Results</h2>
-          {result ? (
-            <ResultsView result={result} />
-          ) : (
-            <div className="rounded-xl border border-ink bg-canvas h-[300px] flex items-center justify-center text-ink text-sm">
-              Click Run Scenario to see the distribution and statistics
-            </div>
-          )}
-        </section>
+            <section className="p-6 bg-panel-grey/40">
+              <h2 className="text-base font-semibold text-ink mb-4">Results</h2>
+              {result ? (
+                <ResultsView result={result} />
+              ) : (
+                <div className="rounded-xl border border-ink bg-canvas h-[300px] flex items-center justify-center text-ink text-sm">
+                  Click Run Scenario to see the distribution and statistics
+                </div>
+              )}
+            </section>
+          </>
+        )}
+
+        {activeTab === "decision-analysis" && (
+          <>
+            <section className="border-b border-ink p-6 overflow-auto bg-canvas">
+              <h2 className="text-base font-semibold text-ink mb-4 text-center">
+                Decision Inputs
+              </h2>
+              <DecisionInputs />
+            </section>
+
+            <section className="p-6 bg-panel-grey/40">
+              <h2 className="text-base font-semibold text-ink mb-4">
+                Decision Results
+              </h2>
+              {decisionResult ? (
+                <DecisionResults result={decisionResult} />
+              ) : (
+                <div className="rounded-xl border border-ink bg-canvas h-[300px] flex items-center justify-center text-ink text-sm">
+                  Click Run Decision Analysis to see the net present value
+                  distribution and drivers
+                </div>
+              )}
+            </section>
+          </>
+        )}
       </main>
 
       <footer className="border-t border-ink px-6 py-3 text-xs text-ink flex items-center justify-between gap-3">

@@ -363,6 +363,172 @@ def tornado():
         return jsonify({"success": False, "error": str(e)}), 400
 
 
+@app.route("/api/decision", methods=["POST"])
+def decision():
+    """
+    Run a Monte Carlo decision analysis on a proposed control.
+
+    For each trial:
+      1. Sample baseline Annualized Loss Expectancy from the same chain as
+         /api/tornado (continuous vulnerability proxy max(0, TC - RS)).
+      2. Sample control parameters: loss reduction, implementation cost,
+         ongoing operating cost, and discount rate.
+      3. Draw a Bernoulli cancellation flag. On cancellation, the trial
+         pays implementation cost in year 0 and recovers salvage value in
+         year 1, with no benefits or further operating costs.
+      4. For active trials, compute annual cashflows over the time horizon:
+           - Year 0: -implementation_cost - ongoing_cost
+           - Year t (t >= ramp_up): benefit_t - ongoing_cost
+             where benefit_t = baseline_ale - max(residual_floor,
+                                                  baseline_ale * (1 - r_t))
+             and r_t = loss_reduction * (1 - decay)^(t - ramp_up)
+           - Year t (t < ramp_up): -ongoing_cost
+      5. Discount cashflows by the per-trial discount rate.
+      6. Sum to net present value per trial.
+
+    Returns the net present value distribution plus a tornado-style rank
+    correlation of decision drivers against net present value.
+    """
+    try:
+        from scipy.stats import spearmanr
+
+        data = request.json
+        baseline = data["baseline"]
+        control = data["control"]
+        iterations = int(data.get("iterations", 10000))
+        seed = int(data.get("seed", 42))
+        rng = np.random.default_rng(seed)
+
+        def sample(d):
+            return parse_distribution(d).sample(iterations, rng)
+
+        cf   = np.maximum(sample(baseline["contact_frequency"]), 0)
+        poa  = np.clip(sample(baseline["probability_of_action"]),    0, 1)
+        tc   = np.clip(sample(baseline["threat_capability"]),        0, 1)
+        rs   = np.clip(sample(baseline["resistance_strength"]),      0, 1)
+        pl   = np.maximum(sample(baseline["primary_loss"]),          0)
+        slef = np.clip(sample(baseline["secondary_loss_frequency"]), 0, 1)
+        slm  = np.maximum(sample(baseline["secondary_loss_magnitude"]), 0)
+
+        tef = cf * poa
+        vuln = np.maximum(tc - rs, 0.0)
+        lef = tef * vuln
+        ale_baseline = lef * (pl + slef * slm)
+
+        r_samples  = np.clip(sample(control["loss_reduction"]),       0, 1)
+        c0_samples = np.maximum(sample(control["implementation_cost"]), 0)
+        cy_samples = np.maximum(sample(control["ongoing_cost"]),        0)
+        d_samples  = np.clip(sample(control["discount_rate"]),        0, 1)
+
+        horizon = int(control.get("horizon_years", 5))
+        ramp_up = int(control.get("ramp_up_year", 1))
+        decay = float(control.get("efficacy_decay", 0.05))
+        salvage = float(control.get("salvage_value", 0.0))
+        residual_floor = float(control.get("residual_loss_floor", 0.0))
+        p_cancel = float(control.get("cancellation_probability", 0.10))
+
+        cancelled = rng.random(iterations) < p_cancel
+
+        t = np.arange(horizon)
+        discount = 1.0 / (1.0 + d_samples[:, None]) ** t[None, :]
+
+        # Per-year benefit for active trials
+        benefit_mask = (t >= ramp_up).astype(float)
+        decay_factor = (1.0 - decay) ** np.maximum(0, t - ramp_up)
+        effective_r = r_samples[:, None] * decay_factor[None, :] * benefit_mask[None, :]
+        post_ale = np.maximum(residual_floor, ale_baseline[:, None] * (1.0 - effective_r))
+        benefit = ale_baseline[:, None] - post_ale
+
+        costs = np.zeros((iterations, horizon))
+        costs[:, 0] = c0_samples
+        costs += cy_samples[:, None]
+        cashflow_active = benefit - costs
+
+        cashflow_cancelled = np.zeros((iterations, horizon))
+        cashflow_cancelled[:, 0] = -c0_samples
+        if horizon > 1:
+            cashflow_cancelled[:, 1] = salvage
+
+        cashflow = np.where(cancelled[:, None], cashflow_cancelled, cashflow_active)
+        npv = np.sum(cashflow * discount, axis=1)
+
+        # Worst-case 5% tail uses lower quantile (since negative net present value is bad)
+        p5 = float(np.percentile(npv, 5))
+        npv_below_5 = npv[npv <= p5]
+        summary = {
+            "mean":    float(np.mean(npv)),
+            "median":  float(np.median(npv)),
+            "std":     float(np.std(npv)),
+            "min":     float(np.min(npv)),
+            "max":     float(np.max(npv)),
+            "p10":     float(np.percentile(npv, 10)),
+            "p25":     float(np.percentile(npv, 25)),
+            "p75":     float(np.percentile(npv, 75)),
+            "p90":     float(np.percentile(npv, 90)),
+            "p95":     float(np.percentile(npv, 95)),
+            "var_95":  p5,
+            "cvar_95": float(np.mean(npv_below_5) if len(npv_below_5) > 0 else p5),
+        }
+
+        active_mask = ~cancelled
+        if active_mask.any() and horizon > ramp_up:
+            post_ramp_benefit = benefit[active_mask, ramp_up:]
+            expected_annual_savings = float(np.mean(post_ramp_benefit))
+        else:
+            expected_annual_savings = 0.0
+
+        hist_counts, hist_bins = np.histogram(npv, bins=50)
+        sorted_npv = np.sort(npv)
+        exceedance_probs = 1 - np.arange(1, len(sorted_npv) + 1) / len(sorted_npv)
+        sample_idx = np.linspace(0, len(sorted_npv) - 1, 100, dtype=int)
+
+        drivers = {
+            "Baseline Annualized Loss Expectancy": ale_baseline,
+            "Loss Reduction":                       r_samples,
+            "Implementation Cost":                  c0_samples,
+            "Ongoing Operating Cost":               cy_samples,
+            "Discount Rate":                        d_samples,
+            "Cancellation":                         cancelled.astype(float),
+        }
+        rows = []
+        for label, samples in drivers.items():
+            try:
+                rho, _p = spearmanr(samples, npv)
+                if not np.isfinite(rho):
+                    rho = 0.0
+            except Exception:
+                rho = 0.0
+            rows.append({"input": label, "rho": float(rho)})
+        rows.sort(key=lambda r: abs(r["rho"]), reverse=True)
+
+        return jsonify({
+            "success": True,
+            "summary": summary,
+            "prob_positive": float(np.mean(npv > 0) * 100),
+            "prob_cancelled": float(np.mean(cancelled) * 100),
+            "expected_baseline_ale": float(np.mean(ale_baseline)),
+            "expected_annual_savings": expected_annual_savings,
+            "histogram": {
+                "counts": hist_counts.tolist(),
+                "bins": hist_bins.tolist(),
+            },
+            "exceedance": {
+                "values": sorted_npv[sample_idx].tolist(),
+                "probabilities": (exceedance_probs[sample_idx] * 100).tolist(),
+            },
+            "tornado": rows,
+            "horizon_years": horizon,
+            "ramp_up_year": ramp_up,
+            "iterations": iterations,
+            "seed": seed,
+        })
+
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
+        return jsonify({"success": False, "error": str(e)}), 400
+
+
 @app.route("/api/simulate-sle", methods=["POST"])
 def simulate_sle():
     """Run a Single Loss Event simulation (Loss Magnitude only, no LEF)."""

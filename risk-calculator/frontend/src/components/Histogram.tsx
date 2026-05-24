@@ -15,9 +15,20 @@ type Props = {
   bins: number[];
   materiality?: number | null;
   onHover?: (text: string | null) => void;
+  trialNoun?: string;
+  valueLabel?: string;
+  rangeNoun?: string;
 };
 
-export default function Histogram({ counts, bins, materiality, onHover }: Props) {
+export default function Histogram({
+  counts,
+  bins,
+  materiality,
+  onHover,
+  trialNoun = "simulated years",
+  valueLabel = "Loss",
+  rangeNoun = "an annual loss",
+}: Props) {
   const data = counts.map((c, i) => ({
     bin: (bins[i] + bins[i + 1]) / 2,
     binLow: bins[i],
@@ -36,7 +47,7 @@ export default function Histogram({ counts, bins, materiality, onHover }: Props)
             const d = s.activePayload[0].payload;
             const pct = total > 0 ? ((d.count / total) * 100).toFixed(1) : "0";
             onHover?.(
-              `${pct} percent of simulated years produced an annual loss between ${fmtUsd(
+              `${pct} percent of ${trialNoun} produced ${rangeNoun} between ${fmtUsd(
                 d.binLow
               )} and ${fmtUsd(d.binHigh)}.`
             );
@@ -54,7 +65,7 @@ export default function Histogram({ counts, bins, materiality, onHover }: Props)
         <YAxis tick={{ fontSize: 13, fill: "#000" }} stroke="#000" />
         <Tooltip
           formatter={(v: number) => v.toLocaleString()}
-          labelFormatter={(v: number) => `Loss: ${fmtUsd(v)}`}
+          labelFormatter={(v: number) => `${valueLabel}: ${fmtUsd(v)}`}
           contentStyle={{ fontSize: 11 }}
         />
         <Bar dataKey="count" fill="#1d4ed8" />
