@@ -128,7 +128,7 @@ export default function PrintPage3() {
           </div>
           <div className="rounded-xl border border-ink bg-canvas p-2">
             <h3 className="text-xs font-semibold text-ink mb-1">
-              Net present value exceedance curve
+              Risk profile: Net present value
             </h3>
             <ExceedanceCurve
               values={result!.exceedance.values}

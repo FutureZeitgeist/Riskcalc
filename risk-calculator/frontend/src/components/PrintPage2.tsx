@@ -113,6 +113,7 @@ export default function PrintPage2() {
                 values={result!.exceedance.values}
                 probabilities={result!.exceedance.probabilities}
                 materiality={matValue}
+                logX
               />
             </div>
             <div className="rounded-xl border border-ink bg-canvas p-2">

@@ -72,6 +72,7 @@ export default function ResultsView({ result }: Props) {
             probabilities={result.exceedance.probabilities}
             materiality={matValue}
             onHover={setExHover}
+            logX
           />
         </div>
       </div>

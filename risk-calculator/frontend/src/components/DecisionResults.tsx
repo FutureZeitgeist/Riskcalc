@@ -107,7 +107,7 @@ export default function DecisionResults({ result }: Props) {
         </div>
         <div className="rounded-xl border border-ink bg-canvas p-3">
           <h3 className="text-sm font-semibold text-ink mb-2">
-            Net present value exceedance curve
+            Risk profile: Net present value
           </h3>
           <ExceedanceCurve
             values={result.exceedance.values}

@@ -17,6 +17,7 @@ type Props = {
   onHover?: (text: string | null) => void;
   hoverTemplate?: (probPct: number, value: number) => string;
   tooltipLabel?: (v: number) => string;
+  logX?: boolean;
 };
 
 export default function ExceedanceCurve({
@@ -26,8 +27,11 @@ export default function ExceedanceCurve({
   onHover,
   hoverTemplate,
   tooltipLabel,
+  logX = false,
 }: Props) {
-  const data = values.map((v, i) => ({ value: v, prob: probabilities[i] }));
+  const data = values
+    .map((v, i) => ({ value: v, prob: probabilities[i] }))
+    .filter((d) => (logX ? d.value > 0 : true));
 
   return (
     <ResponsiveContainer width="100%" height={280}>
@@ -51,6 +55,9 @@ export default function ExceedanceCurve({
         <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
         <XAxis
           dataKey="value"
+          type="number"
+          scale={logX ? "log" : "linear"}
+          domain={logX ? ["auto", "auto"] : ["dataMin", "dataMax"]}
           tickFormatter={(v) => fmtUsdShort(v)}
           tick={{ fontSize: 13, fill: "#000" }}
           stroke="#000"
